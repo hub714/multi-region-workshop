@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# LIKE_ECR_REPO=$(jq < cfn-output.json -r '.LikeEcrRepo')
+# MONO_ECR_REPO=$(jq < cfn-output.json -r '.MonoEcrRepo')
+
+# $(aws ecr get-login --no-include-email)
+
+docker build -t service:latest app
+# docker tag like-service:latest $LIKE_ECR_REPO:latest
+# docker push $LIKE_ECR_REPO:latest
