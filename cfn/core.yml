@@ -280,7 +280,9 @@ Resources:
         Statement:
         - Effect: Allow
           Principal:
-            Service: [ecs-tasks.amazonaws.com]
+            Service: 
+              - ecs-tasks.amazonaws.com
+              - ec2.amazonaws.com
           Action: ['sts:AssumeRole']
       Path: /
       Policies:
@@ -311,7 +313,7 @@ Resources:
                 - 'dynamodb:GetItem'
               Resource: 'arn:aws:dynamodb:*:*:table/MysfitsTable*'
     
-    MythicalProfile:
+  MythicalProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:

@@ -3,13 +3,17 @@ import json
 import logging
 from collections import defaultdict
 import argparse
+import requests
 
 # create a DynamoDB client using boto3. The boto3 library will automatically
 # use the credentials associated with our ECS task role to communicate with
 # DynamoDB, so no credentials need to be stored/managed at all by our code!
 
-# TODO: Generalize Region
-client = boto3.client('dynamodb', region_name='us-west-2')
+r = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+
+region = r.json()['region']
+
+client = boto3.client('dynamodb', region_name=region)
 
 def getMysfitsJson(items):
     # loop through the returned mysfits and add their attributes to a new dict

@@ -9,4 +9,7 @@ bootstrap/fetch-outputs
 echo "Populating DynamoDB table..."
 bootstrap/ddb/load-ddb
 echo "Success!"
+echo "Building Docker containers"
 bootstrap/docker/build-containers
+echo "Assigning Instance Profile"
+bootstrap/associate-profile
