@@ -311,11 +311,11 @@ Resources:
                 - 'dynamodb:GetItem'
               Resource: 'arn:aws:dynamodb:*:*:table/MysfitsTable*'
     
-    MythicalProfile:
-      Type: AWS::IAM::InstanceProfile
-      Properties:
-        Roles:
-          - !Ref ECSTaskRole
+  MythicalProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref ECSTaskRole
 
   # An IAM role that allows the AWS CodePipeline service to perform it's
   # necessary actions. We have intentionally left permissions on this role
@@ -457,13 +457,13 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
         
-    MythicalEnvironment:
+  MythicalEnvironment:
     Type: AWS::Cloud9::EnvironmentEC2
     Properties:
       AutomaticStopTimeMinutes: 30
       InstanceType: t2.small
       Name: !Sub Project-${AWS::StackName}
-      SubnetId: !Ref PublicOne
+      SubnetId: !Ref PublicSubnetOne
 
 # These are the values output by the CloudFormation template. Be careful
 # about changing any of them, because of them are exported with specific
