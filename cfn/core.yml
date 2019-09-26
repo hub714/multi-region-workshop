@@ -466,7 +466,92 @@ Resources:
       InstanceType: t2.small
       Name: !Sub Project-${AWS::StackName}
       SubnetId: !Ref PublicSubnetOne
+      
+  MythicalServiceRepo:
+    Type: AWS::ECR::Repository
 
+  MythicalEcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub Cluster-${AWS::StackName}
+
+  MythicalServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Multi-Region-Service-${AWS::StackName} 
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}:latest
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: http
+          Environment:
+            - Name: UPSTREAM_URL
+              Value: !GetAtt MythicalLoadBalancer.DNSName
+            - Name: DDB_TABLE_NAME
+              Value: !Ref MythicalDynamoTable
+          # LogConfiguration:
+          #   LogDriver: awslogs
+          #   Options:
+          #     awslogs-group: !Ref MythicalMonolithLogGroup
+          #     awslogs-region: !Ref AWS::Region
+          #     awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+  
+  MythicalLoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub SecurityGroup-${AWS::StackName}
+      GroupDescription: Access to the load balancer
+      VpcId: !Ref 'VPC'
+      SecurityGroupIngress:
+          # Allow access to ALB from anywhere on the internet
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+
+  MythicalLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub alb-${AWS::StackName}
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups:
+        - !Ref MythicalLoadBalancerSecurityGroup
+      Subnets:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+        
+  MythicalListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref MythicalTargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref MythicalLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  MythicalTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: ip
 # These are the values output by the CloudFormation template. Be careful
 # about changing any of them, because of them are exported with specific
 # names so that the other task related CF templates can use them.
@@ -535,3 +620,5 @@ Outputs:
     Value: !Ref MythicalDynamoTable
   ProfileName:
     Value: !Ref MythicalProfile
+  MythicalServiceEcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
