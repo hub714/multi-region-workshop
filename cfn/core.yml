@@ -310,6 +310,12 @@ Resources:
                 - 'dynamodb:UpdateItem'
                 - 'dynamodb:GetItem'
               Resource: 'arn:aws:dynamodb:*:*:table/MysfitsTable*'
+    
+    MythicalProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref ECSTaskRole
 
   # An IAM role that allows the AWS CodePipeline service to perform it's
   # necessary actions. We have intentionally left permissions on this role
@@ -525,3 +531,5 @@ Outputs:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
   DynamoTable:
     Value: !Ref MythicalDynamoTable
+  ProfileName:
+    Value: !Ref MythicalProfile

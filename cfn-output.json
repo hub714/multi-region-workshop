@@ -1,15 +1,15 @@
 {
   "CurrentAccount": "521243010531",
-  "FargateContainerSecurityGroup": "sg-085f10355e1cbce41",
-  "ECSTaskRole": "arn:aws:iam::521243010531:role/MythicalMysfitsCoreStack-ECSTaskRole-17M6Y44YL36KC",
-  "PrivateSubnetTwo": "subnet-00d862adc25fa552f",
+  "FargateContainerSecurityGroup": "sg-0940d8eebc22f52b1",
+  "ECSTaskRole": "arn:aws:iam::521243010531:role/mrw-ECSTaskRole-KS4Z1KQTQX42",
+  "PrivateSubnetTwo": "subnet-0de5827fbdbed0b28",
   "CurrentRegion": "us-west-2",
-  "VPCId": "vpc-027fa7e4a37670326",
+  "VPCId": "vpc-0486c569c3d588d3f",
   "CodeBuildRole": "arn:aws:iam::521243010531:role/MythicalMysfitsServiceCodeBuildServiceRole",
   "CodePipelineRole": "arn:aws:iam::521243010531:role/MythicalMysfitsServiceCodePipelineServiceRole",
-  "DynamoTable": "Table-MythicalMysfitsCoreStack",
-  "EcsServiceRole": "arn:aws:iam::521243010531:role/MythicalMysfitsCoreStack-EcsServiceRole-F3TJIBMDJER9",
-  "PrivateSubnetOne": "subnet-0148a295b99ea2d63",
-  "PublicSubnetOne": "subnet-0d2c57e64b83dc0eb",
-  "PublicSubnetTwo": "subnet-0f0c371ff346d2731"
+  "DynamoTable": "Table-mrw",
+  "EcsServiceRole": "arn:aws:iam::521243010531:role/mrw-EcsServiceRole-Y2AGLLUZAQ2G",
+  "PrivateSubnetOne": "subnet-06af1fc4f054a628b",
+  "PublicSubnetOne": "subnet-0314e3706afabcbf4",
+  "PublicSubnetTwo": "subnet-0d4f090c628ea8f82"
 }

@@ -7,5 +7,6 @@ sudo yum install -y jq
 echo "Fetching CloudFormation outputs..."
 bootstrap/fetch-outputs
 echo "Populating DynamoDB table..."
-bootstrap/load-ddb
+bootstrap/ddb/load-ddb
 echo "Success!"
+bootstrap/docker/build-containers
