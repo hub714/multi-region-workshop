@@ -11,5 +11,7 @@ bootstrap/ddb/load-ddb
 echo "Success!"
 echo "Building Docker containers"
 bootstrap/docker/build-containers
+bootstrap/docker/update-service-json
+bootstrap/docker/create-fargate-service
 echo "Assigning Instance Profile"
 bootstrap/associate-profile

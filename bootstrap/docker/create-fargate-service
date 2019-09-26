@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SERVICE_TASK_DEF=$(jq < cfn-output.json -r '.MythicalServiceTaskDefinition')
+
+aws ecs create-service --cli-input-json file://service.json --task-definition $SERVICE_TASK_DEF
+
