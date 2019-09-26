@@ -1,4 +1,4 @@
-# Mythical Mysfits: DevSecOps with Docker and AWS Fargate
+# Mythical Mysfits: Building Multi-Region Applications that Align with BC/DR Objectives
 
 ## Lab 0 - Deploy Existing Mythical Stack
 
@@ -36,24 +36,6 @@ Region | Launch Template
 The links above will bring you to the AWS CloudFormation console with the **Specify an Amazon S3 template URL** field populated and radio button selected. Just click **Next**. If you do not have this populated, please click the link above.
 
 ![CloudFormation Starting Stack](images/cfn-createstack-1.png)
-
-3\. Specify stack details
-
-On the Create Stack page, the stack name should automatically be populated. If you're running multiple workshop environments in the same account, use a different stack name.
-
-<!--There is a parameter **SkipBucket** but you don't need to change anything.-->
-
-<!--- **SkipBucket** - *If you want to skip the creation of the Mythical Mysfits S3 website bucket*-->
-
-For the parameter **ClairDBPassword** you need to follow the Postgres minimum password requirements:
-
-<pre><b>
-Master Password must be at least eight characters long, as in "mypassword". Can be any printable ASCII character except "/", "", or "@".
-</b></pre>
-
-Click **Next** to continue.
-
-![CloudFormation Parameters](images/cfn-createstack-2.png)
 
 4\. Configure stack options
 
@@ -105,19 +87,7 @@ On the bottom, you will see a bash shell (Yellow). For the remainder of the lab,
 
 ### Configure Cloud9 Working Environment
 
-1\. Configure Git credentials
-
-Since most of the labs are going to be using git, let's set up our permissions now. There are a number of ways to authenticate with git repositories, and specifically CodeCommit in this case, but for the sake of simplicity, we'll use the CodeCommit credential helper here. Enter the following commands to configure git to access CodeCommit. 
-
-<pre>
-$ git config --global credential.helper "cache --timeout=7200"
-$ git config --global user.email "<b><i>REPLACEWITHYOUREMAIL</i></b>"
-$ git config --global user.name "<b><i>REPLACEWITHYOURNAME</i></b>"
-$ git config --global credential.helper '!aws codecommit credential-helper $@'
-$ git config --global credential.UseHttpPath true
-</pre>
-
-2\. Clone Workshop Repo
+1\. Clone Workshop Repo
 
 There are a number of files and startup scripts we have pre-created for you. They're all in the main repo that you're using, so we'll clone that locally. Run this:
 
@@ -125,7 +95,7 @@ There are a number of files and startup scripts we have pre-created for you. The
 $ git clone https://github.com/hub714/multi-region-workshop.git
 </pre>
 
-3\. Bootstrap
+2\. Bootstrap
 
 There are a number of files that need to be created in order for your services to run later, so let's create them now.
 
@@ -134,184 +104,12 @@ $ cd ~/environment/multi-region-workshop
 $ bootstrap/setup
 </pre>
 
-# STOP! Pay attention here because it matters! Choose Your Path.
-
-<details>
-<summary>
-<b>Click here</b> if you are already attended CON214 or are familiar with Docker, Fargate, and AWS in general, we'll give you instructions on how to run the bootstrap script that will get you to the start of Lab 1.
-</summary>
-<pre>
-$ cd ~/environment/amazon-ecs-mythicalmysfits-workshop/workshop-2/
-$ script/setup_ws1_end
-</pre>
-
-You should now have 2 Fargate services running in ECS - one for the Monolith service and one for the Like service. These are both sitting behind an ALB.
-
-One last thing before you move on. Go to the CloudFormation Outputs section of your stack and get the **S3WebsiteEndpoint**. It is an HTTP link. Copy and paste it into your browser window and bookmark it or put it in a note. It should already be working. If you see a bunch of Mysfits, it's working. Otherwise, it's not.
-
 # Checkpoint
 
-You made it to the end of Lab 0. You should now have two running services hooked into an ALB. If you visit the S3 static website bucket that was created as part of the bootstrap, it should be working already and you should see a bunch of Mythical Mysfits. Now you're ready to move on to Lab 1 to start your journey to DevSecOps!
+You made it to the end of Lab 0. You've deployed a service.
 
 [Proceed to Lab 1](../Lab-1)
 
-</details>
 
-<details>
-<summary>
-<b>Click here</b> if you want a <b>refresher</b> or a quick crash course on Docker, Fargate, and AWS in general. You'll do a few of the steps from CON214 to get you to the start of Lab 1.
-</summary>
-
-### Crash Course/Refresher on Workshop 1 (CON214: Monolith to Microservice with Docker and AWS Fargate)
-
-1\. Build the monolith docker image and test it
-
-In order for us to use a Docker image, we have to create it first. We'll do it manually here but don't worry, the whole point is to automate all this away. 
-
-<pre>
-$ cd ~/environment/amazon-ecs-mythicalmysfits-workshop/workshop-2/app/monolith-service
-$ docker build -t monolith-service .
-</pre>
-
-Run the docker container and test the adoption agency platform running as a container to make sure it responds
-
-Use the [docker run](https://docs.docker.com/engine/reference/run/) command to run your image; the -p flag is used to map the host listening port to the container listening port. Note that "Table-REPLACEME_STACKNAME" will need to be updated; replace the ***REPLACEME_STACKNAME*** portion with the name you entered when you created the CloudFormation stack.
-
-<pre>
-$ docker run -p 8000:80 -e AWS_DEFAULT_REGION=<b><i>REPLACEME_REGION</i></b> -e DDB_TABLE_NAME=<b><i>Table-REPLACEME_STACKNAME</i></b> monolith-service
-</pre>
-
-Following our naming conventions, my command would be:
-<pre>
-$ docker run -p 8000:80 -e AWS_DEFAULT_REGION=eu-west-1 -e DDB_TABLE_NAME=Table-mythical-mysfits-devsecops monolith-service
- * Running on http://0.0.0.0:80/ (Press CTRL+C to quit)
-</pre>
-
-Press **Ctrl + C to exit**
-
-2\. Push to the monolith-service ECR Repository
-
-In order to pull an image to use it, we have to put it somewhere. Similarly to how we use Git and centralized source control systems like GitHub, we'll use Amazon EC2 Container Registry (ECR) to store our images. Let's start by getting the ECR repository that we will be pushing to. Use the CLI to run `aws ecr describe-repositories` and note down both of the **repositoryUri** values for the ECR repositories that were created for you. The **repositoryName** should have the words mono or like in them. Don't worry that the name has a bunch of random characters in it. That's just CloudFormation making uniquely named resources for you.
-
-<pre>
-$ aws ecr describe-repositories
-{
-    "repositories": [
-        {
-            "registryId": "123456789012", 
-            "repositoryName": "mythic-mono-ui2nkbotfxk2", 
-            "repositoryArn": "arn:aws:ecr:eu-west-1:123456789012:repository/mythic-mono-ui2nkbotfxk2", 
-            "createdAt": 1542995670.0, 
-            "repositoryUri": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/mythic-mono-ui2nkbotfxk2"
-        }, 
-        {
-            "registryId": "123456789012", 
-            "repositoryName": "mythic-like-qhe5ji30css2", 
-            "repositoryArn": "arn:aws:ecr:eu-west-1:123456789012:repository/mythic-like-qhe5ji30css2", 
-            "createdAt": 1542995670.0, 
-            "repositoryUri": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/mythic-like-qhe5ji30css2"
-        }
-    ]
-}
-</pre>
-
-Now that we have the repository URIs, we can tag and push the images up to ECR for later use. Here we are pushing the monolith-service to the repository with the word `mono` in it we got from above. 
-
-<pre>
-$ $(aws ecr get-login --no-include-email --region <b><i>REPLACEME_REGION</b></i>)
-$ docker tag monolith-service:latest <b><i>REPLACEME_ECR_REPOSITORY_URI</b></i>:latest
-$ docker push <b><i>REPLACEME_ECR_REPOSITORY_URI</b></i>:latest
-
-The push refers to repository [123456789012.dkr.ecr.eu-west-1.amazonaws.com/mythical-mysfits-devsecops/monolith-service]
-a09105a1d2ce: Pushed 
-b0be10c9aaa2: Pushed 
-5a458948ccaa: Pushed 
-2fc1a26ddb10: Pushed 
-3178611d3d5f: Pushed 
-76c033092e10: Pushed 
-2146d867acf3: Pushed 
-ae1f631f14b7: Pushed 
-102645f1cf72: Pushed 
-latest: digest: sha256:5d985802219c5a92ea097d414858d962c125c1ff46cfc70edcdf7f05ac964f62 size: 2206
-</pre>
-
-When you issue the push command, Docker pushes the layers up to ECR, and if you refresh the monolith-service ECR repository page, you'll see an image indicating the latest version.  
-
-2\. Build the like docker image and push to ECR.
-
-We already have the repository URIs so let's build the like-service:
-
-<pre>
-$ cd ~/environment/amazon-ecs-mythicalmysfits-workshop/workshop-2/app/like-service
-$ docker build -t like-service .
-</pre>
-
-*Note: Did you notice that the build time was significantly shorter when building the like-service? That's because most of the layers were already cached*
-
-<pre>
-$ docker tag like-service:latest <b><i>REPLACEME_ECR_REPOSITORY_URI</b></i>:latest
-$ docker push <b><i>REPLACEME_ECR_REPOSITORY_URI</b></i>:latest
-</pre>
-
-3\. Look at the task definition for the monolith-service
-
-Task definitions are an integral part of Fargate. It tells the Fargate service what to run, from how much memory to which actual Docker image to run. 
-
-As part of the core infrastructure stack, we've already created task definitions for you, but let's take a look at them to understand what gets updated on a deployment. In the AWS Management Console, navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard. Check the checkbox next to the monolith-service task definition. It should be named something like Mythical-Mysfits-Monolith-mythical-mysfits-devsecops. Then click on **Create New Revision**
-
-![ECS Create Task Definition Revision](images/ecs-taskdef-describe.png)
-
-Scroll down to Container Definitions where you should see where we have pre-defined a monolith-service container. Click on **monolith-service** to see details. Normally, this is where you'd modify the container image to change what you want to deploy to Fargate. However, since we've already pre-populated this, you're all set.
-
-![ECS Update Task Definition Image](images/ecs-taskdef-change-image.png)
-
-Cancel out of everything until you're back to the **Task Definition** page.
-
-4\. Create Fargate services
-
-First, we get the task definition names that we want to use. You saw them in the console earlier, but let's get them from the CLI:
-
-<pre>
-$ aws ecs list-task-definitions
-{
-    "taskDefinitionArns": [
-        "arn:aws:ecs:eu-west-1:123456789012:task-definition/Mythical-Mysfits-Like-Service-mythical-mysfits-devsecops:1", 
-        "arn:aws:ecs:eu-west-1:123456789012:task-definition/Mythical-Mysfits-Monolith-Service-mythical-mysfits-devsecops:1"
-    ]
-}
-</pre>
-
-Next up we need to create the Fargate services for the monolith service and the like service. We're using AWS CLI skeletons that we've updated to include the output values from the CloudFormation stack. The only thing you have to do is pass in the task definitions you noted down earlier. Run the following commands from your Cloud9 IDE, substituting in the task definitions for the ones you just listed. Make sure to include the number at the very end.
-
-<pre>
-$ cd ~/environment/amazon-ecs-mythicalmysfits-workshop/workshop-2/Lab-0
-$ aws ecs create-service --cli-input-json file://monolith-service.json --task-definition REPLACE_ME_MONOLITH_TASK_DEFINITION
-$ aws ecs create-service --cli-input-json file://like-service.json --task-definition REPLACE_ME_LIKE_TASK_DEFINITION
-</pre>
-
-In my case, things looked like this:
-
-<pre>
-aws ecs create-service --cli-input-json file://monolith-service.json --task-definition Mythical-Mysfits-Monolith-Service-mythical-mysfits-devsecops:1
-aws ecs create-service --cli-input-json file://like-service.json --task-definition Mythical-Mysfits-Like-Service-mythical-mysfits-devsecops:1
-</pre>
-
-If successful, a large blob of JSON describing your new service will appear.
-
-5\. Visit the Mythical Mysfits Homepage
-
-Finally, let's look at what you've set up. The Mythical Mysfits adoption homepage is where you will be able to view all sorts of information about the Mythical Mysfits. To find out how to get there, go to the CloudFormation outputs section for your CloudFormation stack. Look for an output named **S3WebsiteEndpoint**. It is an HTTP link. Copy and paste it into your browser window and bookmark it or put it in a note. It should already be working. If you see a bunch of Mysfits, it's working. Otherwise, it's not.
-
-# Checkpoint
-
-You made it to the end of Lab 0. In one way or another, you should now have two running services hooked into an ALB. If you visit the S3 static website bucket that was created as part of the bootstrap, it should be working already and you should see a bunch of Mythical Mysfits. Now you're ready to move on to Lab 1 to start your journey to DevSecOps!
-
-[Proceed to Lab 1](../Lab-1)
-
-</details>
-
-# The End?
-
-This is the end of Lab 0, but if you're reading this, you may have gone too far. Make sure you click on the hidden dialogues right above this section.
 
 
