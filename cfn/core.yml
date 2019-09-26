@@ -475,7 +475,10 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub Cluster-${AWS::StackName}
-
+  
+  MythicalServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+    
   MythicalServiceTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -491,19 +494,19 @@ Resources:
         - Name: service
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}:latest
           PortMappings:
-            - ContainerPort: 80
+            - ContainerPort: 8080
               Protocol: http
           Environment:
             - Name: UPSTREAM_URL
               Value: !GetAtt MythicalLoadBalancer.DNSName
             - Name: DDB_TABLE_NAME
               Value: !Ref MythicalDynamoTable
-          # LogConfiguration:
-          #   LogDriver: awslogs
-          #   Options:
-          #     awslogs-group: !Ref MythicalMonolithLogGroup
-          #     awslogs-region: !Ref AWS::Region
-          #     awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
   
   MythicalLoadBalancerSecurityGroup:
@@ -535,13 +538,13 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref MythicalTargetGroup
+        - TargetGroupArn: !Ref MythicalServiceTargetGroup
           Type: forward
       LoadBalancerArn: !Ref MythicalLoadBalancer
       Port: 80
       Protocol: HTTP
 
-  MythicalTargetGroup:
+  MythicalServiceTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 10
@@ -549,7 +552,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthyThresholdCount: 3
       UnhealthyThresholdCount: 3
-      Port: 80
+      Port: 8080
       Protocol: HTTP
       VpcId: !Ref VPC
       TargetType: ip
@@ -623,3 +626,11 @@ Outputs:
     Value: !Ref MythicalProfile
   MythicalServiceEcrRepo:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
+  MythicalServiceTargetGroupArn:
+    Value: !Ref MythicalServiceTargetGroup
+  EcsClusterName:
+    Value: !Ref MythicalEcsCluster
+  StackName:
+    Value: !Sub ${AWS::StackName}
+  MythicalServiceTaskDefinition:
+    Value: !Ref MythicalServiceTaskDefinition
