@@ -1,109 +1,82 @@
-# Module 3 - Adding a Data Tier with Amazon DynamoDB
+# Mythical Mysfits: DevSecOps with Docker and AWS Fargate
 
-![Architecture](/images/module-3/architecture-module-3.png)
+## Overview
+![mysfits-welcome](/images/mysfits-welcome.png)
 
-**Time to complete:** 20 minutes
+**Mythical Mysfits** is a (fictional) pet adoption non-profit dedicated to helping abandoned, and often misunderstood, mythical creatures find a new forever family! Mythical Mysfits believes that all creatures deserve a second chance, even if they spent their first chance hiding under bridges and unapologetically robbing helpless travelers.
 
-**Services used:**
-* [Amazon DynamoDB](https://aws.amazon.com/dynamodb/)
+Our business has been thriving with only a single Mysfits adoption center, located inside Devils Tower National Monument. Speak, friend, and enter should you ever come to visit.
 
-### Overview
+We've just had a surge of new mysfits arrive at our door with nowhere else to go!  They're all pretty distraught after not only being driven from their homes... but an immensely grumpy ogre has also denied them all entry at a swamp they've used for refuge in the past.  
 
-Now that you have a service deployed and a working CI/CD pipeline to deliver changes to that service automatically whenever you update your code repository, you can quickly move new application features from conception to available for your Mythical Mysfits customers.  With this increased agility, let's add another foundational piece of functionality to the Mythical Mysfits website architecture, a data tier.  In this module you will create a table in [Amazon DynamoDB](https://aws.amazon.com/dynamodb/), a managed and scalable NoSQL database service on AWS with super fast performance.  Rather than have all of the Mysfits be stored in a static JSON file, we will store them in a database to make the websites future more extensible and scalable.
+That's why we've hired you to be our first Full Stack Engineer. We need a more scalable way to show off our inventory of mysfits and let families adopt them. We'd like you to build the first Mythical Mysfits adoption website to help introduce these lovable, magical, often mischievous creatures to the world!
 
-### Adding a NoSQL Database to Mythical Mysfits
+We're growing, but we're struggling to keep up with our new mysfits mainly due to our legacy inventory platform.  We heard about the benefits of containers, especially in the context of microservices and devsecops. We've already taken some steps in that direction, but can you help us take this to the next level? 
 
-#### Create a DynamoDB Table
+We've already moved to a microservice based model, but are still not able to develop quickly. We want to be able to deploy to our microservices as quickly as possible while maintaining a certain level of confidence that our code will work well. This is where you come in.
 
-To add a DynamoDB table to the architecture, we have included another JSON CLI input file that defines a table called **MysfitsTable**. This table will have a primary index defined by a hash key attribute called **MysfitId**, and two more secondary indexes.  The first secondary index will have the hash key of **GoodEvil** and a range key of **MysfitId**, and the second secondary index will have the hash key of **LawChaos** and a range key of **MysfitId**.  These two secondary indexes will allow us to execute queries against the table to retrieve all of the mysfits that match a given Species or Alignment to enable the filter functionality you may have noticed isn't yet working on the website.  You can view this file at `~/environment/aws-modern-application-workshop/module-3/aws-cli/dynamodb-table.json`. No changes need to be made to this file and it is ready to execute.  To learn more about indexes in DynamoDB and other core concepts, visit [this page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html).
+If you are not familiar with DevOps, there are multiple facets to the the word. One focuses on organizational values, such as small, well rounded agile teams focusing on owning a particular service, whereas one focuses on automating the software delivery process as much as possible to shorten the time between code check in and customers testing and providing feedback. This allows us to shorten the feedback loop and iterate based on customer requirements at a much quicker rate. 
 
-To create the table using the AWS CLI, execute the following command in the Cloud9 terminal:
+In this workshop, you will take our Mythical stack and apply concepts of CI/CD to their environment. To do this, you will create a pipeline to automate all deployments using AWS CodeCommit or GitHub, AWS CodeBuild, AWS CodePipeline, and AWS Fargate. Today, the Mythical stack runs on AWS Fargate following a microservice architecture, meaning that there are very strict API contracts that are in place. As part of the move to a more continuous delivery model, they would like to make sure these contracts are always maintained.
 
-```
-aws dynamodb create-table --cli-input-json file://~/environment/aws-modern-application-workshop/module-3/aws-cli/dynamodb-table.json
-```
+The tools that we use in this workshop are part of the AWS Dev Tools stack, but are by no means an end all be all. What you should focus on is the idea of CI/CD and how you can apply it to your environments.
 
-After the command runs, you can view the details of your newly created table by executing the following AWS CLI command in the terminal:
+### Requirements:
+* AWS account - if you don't have one, it's easy and free to [create one](https://aws.amazon.com/)
+* AWS IAM account with elevated privileges allowing you to interact with CloudFormation, IAM, EC2, ECS, ECR, ALB, VPC, SNS, CloudWatch, AWS CodeCommit, AWS CodeBuild, AWS CodePipeline
+* Familiarity with Python, vim/emacs/nano, [Docker](https://www.docker.com/), AWS and microservices - not required but a bonus
 
-```
-aws dynamodb describe-table --table-name MysfitsTable
-```
+### What you'll do:
 
-If we execute the following command to retrieve all of the items stored in the table, you'll see that the table is empty:
+These labs are designed to be completed in sequence, and the full set of instructions are documented below.  Read and follow along to complete the labs.  If you're at a live AWS event, the workshop attendants will give you a high level run down of the labs and help answer any questions.  Don't worry if you get stuck, we provide hints along the way.  
 
-```
-aws dynamodb scan --table-name MysfitsTable
-```
+* **[Lab 0](Lab-0):** Deploy Existing Mythical Stack
+* **[Lab 1](Lab-1):** Integrating Security Right from the Get Go
+* **[Lab 2](Lab-2):** Offloading Builds to AWS CodeBuild
+* **[Lab 3](Lab-3):** Automating End to End Deployments for AWS Fargate
+* **[Lab 4](Lab-4):** Moar Security! Implementing Container Image scanning
+* **Workshop Cleanup** [Cleanup working environment](#workshop-cleanup)
 
-```
-{
-    "Count": 0,
-    "Items": [],
-    "ScannedCount": 0,
-    "ConsumedCapacity": null
-}
-```
+### Conventions:
+Throughout this workshop, we will provide commands for you to run in the terminal.  These commands will look like this:
 
-#### Add Items to the DynamoDB Table
+<pre>
+$ ssh -i <b><i>PRIVATE_KEY.PEM</i></b> ec2-user@<b><i>EC2_PUBLIC_DNS_NAME</i></b>
+</pre>
 
-Also provided is a JSON file that can be used to batch insert a number of Mysfit items into this table.  This will be accomplished through the DynamoDB API **BatchWriteItem.** To call this API using the provided JSON file, execute the following terminal command (the response from the service should report that there are no items that went unprocessed):
+The command starts after the $.  Text that is ***UPPER_ITALIC_BOLD*** indicates a value that is unique to your environment.  For example, the ***PRIVATE\_KEY.PEM*** refers to the private key of an SSH key pair that you've created, and the ***EC2\_PUBLIC\_DNS\_NAME*** is a value that is specific to an EC2 instance launched in your account.  You can find these unique values either in the CloudFormation outputs or by going to the specific service dashboard in the [AWS management console](https://console.aws.amazon.com).
 
-```
-aws dynamodb batch-write-item --request-items file://~/environment/aws-modern-application-workshop/module-3/aws-cli/populate-dynamodb.json
-```
+If you are asked to enter a specific value in a text field, the value will look like `VALUE`.
 
-Now, if you run the same command to scan all of the table contents, you'll find the items have been loaded into the table:
+Hints are also provided along the way and will look like this:
 
-```
-aws dynamodb scan --table-name MysfitsTable
-```
+<details>
+<summary>HINT</summary>
 
-### Committing The First *Real* Code change
-
-#### Copy the Updated Flask Service Code
-Now that we have our data included in the table, let's modify our application code to read from this table instead of returning the static JSON file that was used in Module 2.  We have included a new set of Python files for your Flask microservice, but now instead of reading the static JSON file will make a request to DynamoDB.
-
-The request is formed using the AWS Python SDK called **boto3**. This SDK is a powerful yet simple way to interact with AWS services via Python code. It enables you to use service client definitions and functions that have great symmetry with the AWS APIs and CLI commands you've already been executing as part of this workshop.  Translating those commands to working Python code is simple when using **boto3**.  To copy the new files into your CodeCommit repository directory, execute the following command in the terminal:
-
-```
-cp ~/environment/aws-modern-application-workshop/module-3/app/service/* ~/environment/MythicalMysfitsService-Repository/service/
-```
-
-#### Push the Updated Code into the CI/CD Pipeline
-
-Now, we need to check in these code changes to CodeCommit using the git command line client.  Run the following commands to check in the new code changes and kick of your CI/CD pipeline:
-
-```
-cd ~/environment/MythicalMysfitsService-Repository
-```
-
-```
-git add .
-```
-
-```
-git commit -m "Add new integration to DynamoDB."
-```
-
-```
-git push
-```
-
-Now, in just 5-10 minutes you'll see your code changes make it through your full CI/CD pipeline in CodePipeline and out to your deployed Flask service to AWS Fargate on Amazon ECS.  Feel free to explore the AWS CodePipeline console to see the changes progress through your pipeline.
-
-#### Update The Website Content in S3
-
-Finally, we need to publish a new index.html page to our S3 bucket so that the new API functionality using query strings to filter responses will be used.  The new index.html file is located at `~/environment/aws-modern-application-workshop/module-3/web/index.html`.  Open this file in your Cloud9 IDE and replace the string indicating “REPLACE_ME” just as you did in Module 2, with the appropriate NLB endpoint. Remember do not inlcude the /mysfits path. Refer to the file you already edited in the /module-2/ directory if you need to.  After replacing the endpoint to point at your NLB, upload the new index.html file by running the following command (replacing with the name of the bucket you created in Module 1:
-
-```
-aws s3 cp --recursive ~/environment/aws-modern-application-workshop/module-3/web/ s3://REPLACE_ME_WEBSITE_BUCKET_NAME/
-```
-
-Re-visit your Mythical Mysfits website to see the new population of Mysfits loading from your DynamoDB table and how the Filter functionality is working!
-
-That concludes module 3.
-
-[Proceed to Module 4](/module-4)
+**Nice work, you just revealed a hint!**
+</details>
 
 
-## [AWS Developer Center](https://developer.aws)
+*Click on the arrow to show the contents of the hint.*
+
+### IMPORTANT: Workshop Cleanup
+
+You will be deploying infrastructure on AWS which will have an associated cost. If you're attending an AWS event, credits will be provided.  When you're done with the workshop, [follow the steps at the very end of the instructions](#workshop-cleanup) to make sure everything is cleaned up and avoid unnecessary charges.
+
+* * *
+
+## Let's Begin!
+
+[Go to Lab-0 to set up your environment](Lab-0)
+
+### Workshop Cleanup
+
+This is really important because if you leave stuff running in your account, it will continue to generate charges.  Certain things were created by CloudFormation and certain things were created manually throughout the workshop.  Follow the steps below to make sure you clean up properly.  
+
+1. Delete any manually created resources throughout the labs, e.g. CodePipeline Pipelines and CodeBuild projects.  Certain things like task definitions do not have a cost associated, so you don't have to worry about that.  If you're not sure what has a cost, you can always look it up on our website.  All of our pricing is publicly available, or feel free to ask one of the workshop attendants when you're done.
+2. Go to the CodePipeline console and delete prod-like-service. Hit Edit and then Delete.
+3. Delete any container images stored in ECR, delete CloudWatch logs groups, and empty/delete S3 buckets
+4. In your ECS Cluster, edit all services to have 0 tasks and delete all services
+5. Delete log groups in CloudWatch Logs
+6. Finally, delete the CloudFormation stack launched at the beginning of the workshop to clean up the rest.  If the stack deletion process encountered errors, look at the Events tab in the CloudFormation dashboard, and you'll see what steps failed.  It might just be a case where you need to clean up a manually created asset that is tied to a resource goverened by CloudFormation.
+
