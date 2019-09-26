@@ -1,0 +1,15 @@
+{
+  "CurrentAccount": "521243010531",
+  "FargateContainerSecurityGroup": "sg-085f10355e1cbce41",
+  "ECSTaskRole": "arn:aws:iam::521243010531:role/MythicalMysfitsCoreStack-ECSTaskRole-17M6Y44YL36KC",
+  "PrivateSubnetTwo": "subnet-00d862adc25fa552f",
+  "CurrentRegion": "us-west-2",
+  "VPCId": "vpc-027fa7e4a37670326",
+  "CodeBuildRole": "arn:aws:iam::521243010531:role/MythicalMysfitsServiceCodeBuildServiceRole",
+  "CodePipelineRole": "arn:aws:iam::521243010531:role/MythicalMysfitsServiceCodePipelineServiceRole",
+  "DynamoTable": "Table-MythicalMysfitsCoreStack",
+  "EcsServiceRole": "arn:aws:iam::521243010531:role/MythicalMysfitsCoreStack-EcsServiceRole-F3TJIBMDJER9",
+  "PrivateSubnetOne": "subnet-0148a295b99ea2d63",
+  "PublicSubnetOne": "subnet-0d2c57e64b83dc0eb",
+  "PublicSubnetTwo": "subnet-0f0c371ff346d2731"
+}
