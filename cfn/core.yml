@@ -410,6 +410,7 @@ Resources:
             - "ecr:InitiateLayerUpload"
             - "ecr:GetAuthorizationToken"
             Resource: "*"
+            
   MythicalDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -451,13 +452,13 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
         
-    MythicalEnvironment:
+  MythicalEnvironment:
     Type: AWS::Cloud9::EnvironmentEC2
     Properties:
       AutomaticStopTimeMinutes: 30
       InstanceType: t2.small
       Name: !Sub Project-${AWS::StackName}
-      SubnetId: !Ref PublicOne
+      SubnetId: !Ref PublicSubnetOne
 
 # These are the values output by the CloudFormation template. Be careful
 # about changing any of them, because of them are exported with specific
