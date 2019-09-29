@@ -312,6 +312,16 @@ Resources:
                 - 'dynamodb:UpdateItem'
                 - 'dynamodb:GetItem'
               Resource: 'arn:aws:dynamodb:*:*:table/MysfitsTable*'
+              
+            - Effect: Allow
+              Action:
+                # Allows the X-Ray sidecar to send telemetry data to X-Ray API
+                - 'xray:PutTraceSegments'
+                - 'xray:PutTelemetryRecords'
+                - 'xray:GetSamplingRules'
+                - 'xray:GetSamplingTargets'
+                - 'xray:GetSamplingStatisticSummaries'
+              Resource: '*'
     
   MythicalProfile:
     Type: AWS::IAM::InstanceProfile
@@ -469,6 +479,9 @@ Resources:
       SubnetId: !Ref PublicSubnetOne
       
   MythicalServiceRepo:
+    Type: AWS::ECR::Repository
+    
+  Xray:
     Type: AWS::ECR::Repository
 
   MythicalEcsCluster:
@@ -634,3 +647,5 @@ Outputs:
     Value: !Sub ${AWS::StackName}
   MythicalServiceTaskDefinition:
     Value: !Ref MythicalServiceTaskDefinition
+  XrayEcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
