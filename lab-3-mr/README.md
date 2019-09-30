@@ -18,10 +18,10 @@ Here's what you'll be doing:
 * [Test your AWS CodeBuild Project](#test-your-aws-codebuild-project)
 
 ### 2.1 Artifact Replication
-Also need to copy over artifacts for deployment
-ECR cross region replication?
-object replication in S3
-codecommit x-region app
+- Also need to copy over artifacts for deployment
+- ECR cross region replication?
+- object replication in S3
+- codecommit x-region app
 
 ### 3.2 DB replication
 
