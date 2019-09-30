@@ -1,4 +1,4 @@
-# Mythical Mysfits: DevSecOps with Docker and AWS Fargate
+# Mythical Mysfits: Building Multi-Region Applications that Align with BC/DR Objectives
 
 ## Overview
 ![mysfits-welcome](/images/mysfits-welcome.png)
@@ -11,15 +11,7 @@ We've just had a surge of new mysfits arrive at our door with nowhere else to go
 
 That's why we've hired you to be our first Full Stack Engineer. We need a more scalable way to show off our inventory of mysfits and let families adopt them. We'd like you to build the first Mythical Mysfits adoption website to help introduce these lovable, magical, often mischievous creatures to the world!
 
-We're growing, but we're struggling to keep up with our new mysfits mainly due to our legacy inventory platform.  We heard about the benefits of containers, especially in the context of microservices and devsecops. We've already taken some steps in that direction, but can you help us take this to the next level? 
-
-We've already moved to a microservice based model, but are still not able to develop quickly. We want to be able to deploy to our microservices as quickly as possible while maintaining a certain level of confidence that our code will work well. This is where you come in.
-
-If you are not familiar with DevOps, there are multiple facets to the the word. One focuses on organizational values, such as small, well rounded agile teams focusing on owning a particular service, whereas one focuses on automating the software delivery process as much as possible to shorten the time between code check in and customers testing and providing feedback. This allows us to shorten the feedback loop and iterate based on customer requirements at a much quicker rate. 
-
-In this workshop, you will take our Mythical stack and apply concepts of CI/CD to their environment. To do this, you will create a pipeline to automate all deployments using AWS CodeCommit or GitHub, AWS CodeBuild, AWS CodePipeline, and AWS Fargate. Today, the Mythical stack runs on AWS Fargate following a microservice architecture, meaning that there are very strict API contracts that are in place. As part of the move to a more continuous delivery model, they would like to make sure these contracts are always maintained.
-
-The tools that we use in this workshop are part of the AWS Dev Tools stack, but are by no means an end all be all. What you should focus on is the idea of CI/CD and how you can apply it to your environments.
+We're growing, but we're struggling to keep up with our new mysfits mainly due to our legacy inventory platform.  We have already moved to containers, but have a lack of observability and we are starting up contracts with companies that require us to be up all the time.
 
 ### Requirements:
 * AWS account - if you don't have one, it's easy and free to [create one](https://aws.amazon.com/)
