@@ -108,7 +108,7 @@ $ bootstrap/setup
 
 You made it to the end of Lab 0. You've deployed a service.
 
-[Proceed to Lab 1](../Lab-1)
+[Proceed to Lab 1](../lab-1-xray)
 
 
 

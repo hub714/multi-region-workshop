@@ -2,7 +2,7 @@
 
 ## Lab 3 - Make it multi-region!
 
-In this lab, you will launch your app in another region and then use Global Accelerator to route traffic. Test it as well.
+In this lab, you will launch your app in another region and then use Global Accelerator to route traffic. 
 
 Here's a reference architecture for what you'll be building:
 
@@ -22,4 +22,4 @@ Here's what you'll be doing:
 
 # Checkpoint 
 
-Proceed to [Lab 3](../Lab-3)!
+Proceed to [Lab 4](../lab-4-loadtest)!

@@ -22,4 +22,4 @@ Here's what you'll be doing:
 
 # Checkpoint 
 
-Proceed to [Lab 3](../Lab-3)!
+Proceed to [Lab 3](../lab-3-mr)!

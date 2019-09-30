@@ -313,7 +313,7 @@ As the dev team continues down the road of microservices, they're using [AWS Cod
 ### Checkpoint
 Congratulations!!!  You've successfully implemented X-Ray to trace inbound requests to the Like microservice and discovered valuable information and statistics.
 
-Bonus Activity: There is one more lab to go in this workshop, so only do this if you complete Lab 4 and have extra time.  Try to setup tracing for downstream requests from the Like service to the monolith.  The dev team used the strangler application pattern to implement the Like microservice, which means there is still an integration hook back to the monolith service.
+Proceed to [Lab 2](../lab-2-agg)!
 
 [*^ back to top*](#management-and-operations-with-aws-fargate)
 
