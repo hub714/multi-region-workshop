@@ -59,7 +59,7 @@ You will be deploying infrastructure on AWS which will have an associated cost. 
 
 ## Let's Begin!
 
-[Go to Lab-0 to set up your environment](Lab-0)
+[Go to Lab-0 to set up your environment](lab-0-init)
 
 ### Workshop Cleanup
 
