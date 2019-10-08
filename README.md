@@ -27,7 +27,7 @@ These labs are designed to be completed in sequence, and the full set of instruc
 * **[Lab 2](lab-2-agg):** Build Operational Dashboard
 * **[Lab 3](lab-3-mr-prep):** Prep your app for multi-region deployment
 * **[Lab 4](lab-4-globalacc):** Implement Global Accelerator and manual failover
-* **[Lab 4](lab-5-loadtest):** Load test the system, test your metrics, manual failover
+* **[Lab 5](lab-5-loadtest):** Load test the system, test your metrics, manual failover
 * **[Bonus Lab](/):** [DOES NOT EXIST YET] Bonus lab for something or other
 * **Workshop Cleanup** [Cleanup working environment](#workshop-cleanup)
 
