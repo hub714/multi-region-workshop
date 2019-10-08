@@ -22,11 +22,13 @@ We're growing, but we're struggling to keep up with our new mysfits mainly due t
 
 These labs are designed to be completed in sequence, and the full set of instructions are documented below.  Read and follow along to complete the labs.  If you're at a live AWS event, the workshop attendants will give you a high level run down of the labs and help answer any questions.  Don't worry if you get stuck, we provide hints along the way.  
 
-* **[Lab 0](Lab-0):** Deploy Existing Mythical Stack
-* **[Lab 1](Lab-1):** Integrating Security Right from the Get Go
-* **[Lab 2](Lab-2):** Offloading Builds to AWS CodeBuild
-* **[Lab 3](Lab-3):** Automating End to End Deployments for AWS Fargate
-* **[Lab 4](Lab-4):** Moar Security! Implementing Container Image scanning
+* **[Lab 0](lab-0-init):** Deploy Existing Mythical Stack
+* **[Lab 1](lab-1-xray):** Get Operational Visibility via X-ray and Custom Metrics
+* **[Lab 2](lab-2-agg):** Build Operational Dashboard
+* **[Lab 3](lab-3-mr-prep):** Prep your app for multi-region deployment
+* **[Lab 4](lab-4-globalacc):** Implement Global Accelerator and manual failover
+* **[Lab 4](lab-5-loadtest):** Load test the system, test your metrics, manual failover
+* **[Bonus Lab](/):** [DOES NOT EXIST YET] Bonus lab for something or other
 * **Workshop Cleanup** [Cleanup working environment](#workshop-cleanup)
 
 ### Conventions:

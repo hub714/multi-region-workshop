@@ -1,7 +1,6 @@
 # Mythical Mysfits: Multi-Region-Workshop
 
-## Lab 3 - Prepping to make it multi region
-**steve has slides on this - things u may have forgotten** - it's in chat
+## Lab 4 - Global Accelerator and Manual Failover
 
 In this lab, you will launch your app in another region and then use Global Accelerator to route traffic. 
 
@@ -29,4 +28,4 @@ Here's what you'll be doing:
 
 # Checkpoint 
 
-Proceed to [Lab 4](../lab-4-loadtest)!
+Proceed to [Lab 4](../lab-5-loadtest)!
