@@ -72,7 +72,7 @@ If there was an [error](http://docs.aws.amazon.com/AWSCloudFormation/latest/User
 
 ### Familiarize yourself with the workshop environment
 
-In this part of the workshop, you will simply familiarize yourself with the workshop environment. Here's what we've deployed:
+In this part of the workshop, you will simply familiarize yourself with the workshop environment. If you don't have resources anywhere, you skipped a step. Go back to [the infrastructure deployment step](https://github.com/hub714/multi-region-workshop/tree/issue1/lab-0-init#stop-pay-attention-here-because-it-matters-are-you-at-an-aws-event). Here's what we've deployed:
 
 ![CloudFormation Starting Stack](images/arch-starthere.png)
 
