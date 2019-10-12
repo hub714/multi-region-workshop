@@ -12,7 +12,7 @@ Here's what you'll be doing:
 * [Familiarize Yourself with the Mythical Workshop Environment](#familiarize-yourself-with-the-workshop-environment)
 * [Configure Cloud 9 Mythical Working Environment](#configure-cloud9-working-environment)
 
-# Are you at an AWS Event? 
+# STOP! Pay attention here because it matters! Are you at an AWS Event? 
 <details>
 <summary>
 <b>Click here</b> if you are attending an AWS event andthe organizers are giving me a code to use pre-generated accounts
@@ -24,6 +24,7 @@ Follow the instructions that were given to you to get access to the account firs
 <summary>
 <b>Click here</b> if you are not attending an AWS event and you will be using your own accounts
 </summary>
+
 ### Deploy Mythical CloudFormation Stack
 
 1\. Select an AWS Region
