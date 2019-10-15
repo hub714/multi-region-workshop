@@ -39,10 +39,10 @@ Click on one of the **Deploy to AWS** icons below to region to stand up the core
 
 Region | Launch Template
 ------------ | -------------  
-**Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml) 
+**Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml) 
 
 The links above will bring you to the AWS CloudFormation console with the **Specify an Amazon S3 template URL** field populated and radio button selected. Just click **Next**. If you do not have this populated, please click the link above.
 
@@ -82,6 +82,7 @@ The CloudFormation template will launch the following:
 * ECR repositories for your container images
 * Application Load Balancer to front all your services
 * Cloud9 Development Environment
+* Code Deployment Infrastructure (CodeCommit, CodeBuild, CodePipeline)
 * A DynamoDB table to store your mysfits and their data
 
 1\. Access your AWS Cloud9 Development Environment
@@ -110,7 +111,7 @@ $ git clone https://github.com/hub714/multi-region-workshop.git
 
 2\. Bootstrap
 
-There are a number of files that need to be created in order for your services to run later, so let's create them now.
+There are a number of files that need to be created in order for your services to run later, so let's create them now. This will also bootstrap and create services. 
 
 <pre>
 $ cd ~/environment/multi-region-workshop
