@@ -10,6 +10,10 @@ import os
 # use the credentials associated with our ECS task role to communicate with
 # DynamoDB, so no credentials need to be stored/managed at all by our code!
 
+if (os.environ['DDB_TABLE_NAME'] != ''):
+    table = os.environ['DDB_TABLE_NAME']
+else: 
+    table = 'MysfitsTable'
 
 if (os.environ['AWS_REGION'] != ''):
     region = os.environ['AWS_REGION']
@@ -55,7 +59,8 @@ def getAllMysfits():
     # Mysfits API is low traffic and the table is very small, the scan operation
     # will suit our needs for this workshop.
     response = client.scan(
-        TableName='MysfitsTable'
+        #TableName='MysfitsTable'
+        TableName=table
     )
 
     logging.info(response["Items"])
@@ -70,7 +75,8 @@ def queryMysfitItems(filter, value):
     # Use the DynamoDB API Query to retrieve mysfits from the table that are
     # equal to the selected filter values.
     response = client.query(
-        TableName='MysfitsTable',
+        #TableName='MysfitsTable',
+        TableName=table,
         IndexName=filter+'Index',
         KeyConditions={
             filter: {
@@ -99,6 +105,27 @@ def queryMysfits(queryParam):
     value = queryParam['value']
 
     return queryMysfitItems(filter, value)
+
+# increment the number of likes for a mysfit by 1
+def likeMysfit(mysfitId):
+
+    # Use the DynamoDB API UpdateItem to increment the number of Likes
+    # the mysfit has by 1 using an UpdateExpression.
+    response = client.update_item(
+        TableName=table,
+        Key={
+            'MysfitId': {
+                'S': mysfitId
+            }
+        },
+        UpdateExpression="SET Likes = Likes + :n",
+        ExpressionAttributeValues={':n': {'N': '1'}}
+    )
+
+    response = {}
+    response["Update"] = "Success";
+
+    return json.dumps(response)
 
 # So we can test from the command line
 if __name__ == "__main__":
