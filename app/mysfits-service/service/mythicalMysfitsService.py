@@ -83,10 +83,8 @@ def mainSite():
             </p>
           </body>
           <script>
-        
-            //var mysfitsApiEndpoint = 'REPLACE_ME';
-            
-            var mysfitsApiEndpoint = '';
+                    
+            var mysfitsApiEndpoint = 'API_ENDPOINT';
         
             var app = angular.module('mysfitsApp', []);
         

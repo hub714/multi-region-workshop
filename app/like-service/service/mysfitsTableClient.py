@@ -59,7 +59,6 @@ def getAllMysfits():
     # Mysfits API is low traffic and the table is very small, the scan operation
     # will suit our needs for this workshop.
     response = client.scan(
-        #TableName='MysfitsTable'
         TableName=table
     )
 
@@ -75,7 +74,6 @@ def queryMysfitItems(filter, value):
     # Use the DynamoDB API Query to retrieve mysfits from the table that are
     # equal to the selected filter values.
     response = client.query(
-        #TableName='MysfitsTable',
         TableName=table,
         IndexName=filter+'Index',
         KeyConditions={

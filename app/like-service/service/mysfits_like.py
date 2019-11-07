@@ -48,4 +48,4 @@ def like_mysfit(mysfit_id):
 
 # Run the service on the local server it has been deployed to
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    app.run(host="0.0.0.0", port=8080)

@@ -329,6 +329,12 @@ Resources:
       Roles:
         - !Ref ECSTaskRole
 
+  MythicalLikeGitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties: 
+      RepositoryDescription: Repository for the Mythical Mysfits like service
+      RepositoryName: !Sub ${AWS::StackName}-like-service
+
   # An IAM role that allows the AWS CodePipeline service to perform it's
   # necessary actions. We have intentionally left permissions on this role
   # that will not be used by the CodePipeline service during this workshop.
@@ -428,7 +434,147 @@ Resources:
             - "ecr:InitiateLayerUpload"
             - "ecr:GetAuthorizationToken"
             Resource: "*"
-            
+  
+  # CodeBuild needs an S3 bucket to store artifacts in the interim.
+  MythicalArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete 
+  
+  # Actual CodeBuild project that builds the Docker images and outputs imagedefinitions.json 
+  
+  DockerBuildCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: "CODEPIPELINE"
+      Source:
+        Type: "CODEPIPELINE"
+        BuildSpec: "buildspec_prod.yml"
+      Environment:
+        PrivilegedMode: true
+        ComputeType: "BUILD_GENERAL1_SMALL"
+        Image: "aws/codebuild/docker:17.09.0"
+        Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+        - Name: AWS_ACCOUNT_ID
+          Value: !Ref AWS::AccountId
+          Type: PLAINTEXT
+      Name: !Sub ${AWS::StackName}-like-service-build
+      ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
+  
+  # CodePipeline for deployments. Uses CodeCommit + CodeBuild + ECS, deploying
+  # to an existing ECS service. It looks for imagedefinitions.json as well as 
+  # buildspec_prod for this
+  
+  MythicalLikeServicePipeline:
+    Type: 'AWS::CodePipeline::Pipeline'
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref MythicalArtifactBucket
+      Name: !Sub ${AWS::StackName}
+      RoleArn: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
+      Stages:
+        - Name: 'Source'
+          Actions:
+            - Name: 'Source'
+              ActionTypeId:
+                Category: 'Source'
+                Owner: 'AWS'
+                Version: '1'
+                Provider: 'CodeCommit'
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                PollForSourceChanges: 'false'
+                BranchName: master
+                RepositoryName: !GetAtt MythicalLikeGitRepository.Name
+              RunOrder: 1
+        - Name: 'Build_Docker_Container'
+          Actions:
+            - Name: CodeBuild
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ProjectName: !Ref DockerBuildCodeBuildProject
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: ECS
+              InputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ClusterName: !Ref MythicalEcsCluster
+                ServiceName: !Sub ${AWS::StackName}_Mythical-Like-Service
+                FileName: imagedefinitions.json
+              RunOrder: 1
+              
+  # CodePipeline does not automatically create this for you as part of 
+  # creation, but this role is for the CWE Hook to trigger CodePipeline once 
+  # there's an update in CodeCommit. Otherwise, we have to have CodePipeline  
+  # poll for changes, which is slower.            
+  CodeCommitCloudWatchEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        -
+          PolicyName: cwe-pipeline-execution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              -
+                Effect: Allow
+                Action: codepipeline:StartPipelineExecution
+                Resource: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
+  
+  # Actual CWE Rule to push changes over to CodePipeline.
+                            
+  CodeCommitCloudWatchEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - !GetAtt MythicalLikeGitRepository.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - master
+      Targets:
+        -
+          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
+          RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
+          Id: codepipeline-LikePipeline
+
   MythicalDynamoTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -476,11 +622,14 @@ Resources:
       AutomaticStopTimeMinutes: 30
       InstanceType: t2.small
       Name: !Sub Project-${AWS::StackName}
-      SubnetId: !Ref PublicSubnetOne
+      SubnetId: !Ref PublicSubnetOne    
       
   MythicalServiceRepo:
     Type: AWS::ECR::Repository
     
+  LikeServiceRepo:
+    Type: AWS::ECR::Repository
+
   Xray:
     Type: AWS::ECR::Repository
 
@@ -490,6 +639,9 @@ Resources:
       ClusterName: !Sub Cluster-${AWS::StackName}
   
   MythicalServiceLogGroup:
+    Type: AWS::Logs::LogGroup
+  
+  LikeServiceLogGroup:
     Type: AWS::Logs::LogGroup
     
   MythicalServiceTaskDefinition:
@@ -518,6 +670,38 @@ Resources:
             LogDriver: awslogs
             Options:
               awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+
+  LikeServiceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Multi-Region-Service-${AWS::StackName} 
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Environment:
+            - Name: CHAOSMODE
+              Value: off
+            - Name: DDB_TABLE_NAME
+              Value: !Ref MythicalDynamoTable
+            - Name: LOGLEVEL
+              Value: debug
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LikeServiceLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
@@ -569,6 +753,33 @@ Resources:
       Protocol: HTTP
       VpcId: !Ref VPC
       TargetType: ip
+  
+  MythicalLikeTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: ip
+  
+  MythicalLikeListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref MythicalLikeTargetGroup
+      Conditions:
+      - Field: path-pattern
+        Values:
+        - "/mysfits/*/like"
+      ListenerArn: !Ref MythicalListener
+      Priority: 1
+
 # These are the values output by the CloudFormation template. Be careful
 # about changing any of them, because of them are exported with specific
 # names so that the other task related CF templates can use them.
@@ -633,12 +844,17 @@ Outputs:
     Value: !GetAtt 'MythicalMysfitsServiceCodePipelineServiceRole.Arn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
+  LoadBalancerDNS:
+    Description: The DNS for the load balancer
+    Value: !GetAtt MythicalLoadBalancer.DNSName
   DynamoTable:
     Value: !Ref MythicalDynamoTable
   ProfileName:
     Value: !Ref MythicalProfile
   MythicalServiceEcrRepo:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
+  LikeServiceEcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup
   EcsClusterName:
