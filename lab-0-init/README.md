@@ -11,8 +11,19 @@ Here's what you'll be doing:
 * [Deploy Mythical CloudFormation Stack](#deploy-mythical-cloudformation-stack)
 * [Familiarize Yourself with the Mythical Workshop Environment](#familiarize-yourself-with-the-workshop-environment)
 * [Configure Cloud 9 Mythical Working Environment](#configure-cloud9-working-environment)
-* [Choose Your Mythical Path](#stop-pay-attention-here-because-it-matters)
-* [Crash Course/Refresher of CON214](#crash-courserefresher-on-workshop-1-con214-monolith-to-microservice-with-docker-and-aws-fargate)
+
+# STOP! Pay attention here because it matters! Are you at an AWS Event? 
+<details>
+<summary>
+<b>Click here</b> if you are attending an AWS event andthe organizers are giving me a code to use pre-generated accounts
+</summary>
+Follow the instructions that were given to you to get access to the account first. The stack will be deployed for your already. 
+</details>
+
+<details>
+<summary>
+<b>Click here</b> if you are not attending an AWS event and you will be using your own accounts
+</summary>
 
 ### Deploy Mythical CloudFormation Stack
 
@@ -28,10 +39,10 @@ Click on one of the **Deploy to AWS** icons below to region to stand up the core
 
 Region | Launch Template
 ------------ | -------------  
-**Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mythical-mysfits-devsecops&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml) 
+**Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml) 
 
 The links above will bring you to the AWS CloudFormation console with the **Specify an Amazon S3 template URL** field populated and radio button selected. Just click **Next**. If you do not have this populated, please click the link above.
 
@@ -49,7 +60,19 @@ On the Review page, take a look at all the parameters and make sure they're accu
 
 Click **Create** to launch the CloudFormation stack.
 
-Here is what the templates are launching:
+## Checkpoint:
+
+The CloudFormation stack will take a few minutes to launch.  Periodically check on the stack creation process in the CloudFormation Dashboard.  Your stack should show status **CREATE\_COMPLETE** in roughly 5-10 minutes. If you select box next to your stack and click on the **Events** tab, you can see what steps it's on.  
+
+![CloudFormation CREATE_COMPLETE](images/cfn-create-complete.png)
+
+If there was an [error](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html#troubleshooting-errors) during the stack creation process, CloudFormation will rollback and terminate. You can investigate and troubleshoot by looking in the Events tab. Any errors encountered during stack creation will appear in the event stream as a failure.
+
+</details>
+
+### Familiarize yourself with the workshop environment
+
+In this part of the workshop, you will simply familiarize yourself with the workshop environment. If you don't have resources anywhere, you skipped a step. Go back to [the infrastructure deployment step](https://github.com/hub714/multi-region-workshop/tree/issue1/lab-0-init#stop-pay-attention-here-because-it-matters-are-you-at-an-aws-event). Here's what we've deployed:
 
 ![CloudFormation Starting Stack](images/arch-starthere.png)
 
@@ -59,17 +82,8 @@ The CloudFormation template will launch the following:
 * ECR repositories for your container images
 * Application Load Balancer to front all your services
 * Cloud9 Development Environment
+* Code Deployment Infrastructure (CodeCommit, CodeBuild, CodePipeline)
 * A DynamoDB table to store your mysfits and their data
-
-## Checkpoint:
-
-The CloudFormation stack will take a few minutes to launch.  Periodically check on the stack creation process in the CloudFormation Dashboard.  Your stack should show status **CREATE\_COMPLETE** in roughly 5-10 minutes. If you select box next to your stack and click on the **Events** tab, you can see what steps it's on.  
-
-![CloudFormation CREATE_COMPLETE](images/cfn-create-complete.png)
-
-If there was an [error](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html#troubleshooting-errors) during the stack creation process, CloudFormation will rollback and terminate. You can investigate and troubleshoot by looking in the Events tab.  Any errors encountered during stack creation will appear in the event stream as a failure.
-
-### Familiarize yourself with the workshop environment
 
 1\. Access your AWS Cloud9 Development Environment
 
@@ -97,7 +111,7 @@ $ git clone https://github.com/hub714/multi-region-workshop.git
 
 2\. Bootstrap
 
-There are a number of files that need to be created in order for your services to run later, so let's create them now.
+There are a number of files that need to be created in order for your services to run later, so let's create them now. This will also bootstrap and create services. 
 
 <pre>
 $ cd ~/environment/multi-region-workshop
