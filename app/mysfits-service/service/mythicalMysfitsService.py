@@ -1,11 +1,19 @@
 from flask import Flask, jsonify, json, Response, request
 from flask_cors import CORS
 import mysfitsTableClient
+import requests
+import json
 
 # A very basic API created using Flask that has two possible routes for requests.
 
 app = Flask(__name__)
 CORS(app)
+
+if (os.environ['AWS_REGION'] != ''):
+    region = os.environ['AWS_REGION']
+else:
+    r = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+    region = r.json()['region']
 
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
@@ -33,6 +41,7 @@ def mainSite():
               }
             </style>
             <br>
+            <div>Current region: %s</div>
             <div style="text-align: center">
               <img src="https://www.mythicalmysfits.com/images/mysfits_banner.gif" width="800px" align="center">
             </div>
@@ -84,7 +93,7 @@ def mainSite():
           </body>
           <script>
                     
-            var mysfitsApiEndpoint = 'API_ENDPOINT';
+            var mysfitsApiEndpoint = 'REPLACE_ME_API_ENDPOINT';
         
             var app = angular.module('mysfitsApp', []);
         
@@ -184,7 +193,7 @@ def mainSite():
         
           </script>
         </html>
-        '''
+        ''' % region 
     return http_response
 
 # Returns the data for all of the Mysfits to be displayed on
