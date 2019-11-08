@@ -27,3 +27,13 @@ sed -i -e 's/CLUSTER_NAME/'"${cfnOutputs[EcsClusterName]}"'/' \
        -e 's/PRIVATE_SUBNET_ONE/'"${cfnOutputs[PrivateSubnetOne]}"'/' \
        -e 's/PRIVATE_SUBNET_TWO/'"${cfnOutputs[PrivateSubnetTwo]}"'/' \
        -e 's/FARGATE_CONTAINER_SECURITY_GROUP/'"${cfnOutputs[FargateContainerSecurityGroup]}"'/' service.json
+
+cp bootstrap/docker/service-template.json like-service.json
+
+sed -i -e 's/CLUSTER_NAME/'"${cfnOutputs[EcsClusterName]}"'/' \
+       -e 's/STACK_NAME/'"${cfnOutputs[StackName]}"'/' \
+       -e 's~TARGET_GROUP_ARN~'"${cfnOutputs[LikeServiceTargetGroupArn]}"'~' \
+       -e 's/CONTAINER_NAME/service/' \
+       -e 's/PRIVATE_SUBNET_ONE/'"${cfnOutputs[PrivateSubnetOne]}"'/' \
+       -e 's/PRIVATE_SUBNET_TWO/'"${cfnOutputs[PrivateSubnetTwo]}"'/' \
+       -e 's/FARGATE_CONTAINER_SECURITY_GROUP/'"${cfnOutputs[FargateContainerSecurityGroup]}"'/' like-service.json

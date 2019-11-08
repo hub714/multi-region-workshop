@@ -878,11 +878,19 @@ Outputs:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup
+  LikeServiceTargetGroupArn:
+    Value: !Ref LikeServiceTargetGroup
   EcsClusterName:
     Value: !Ref MythicalEcsCluster
   StackName:
     Value: !Sub ${AWS::StackName}
   MythicalServiceTaskDefinition:
     Value: !Ref MythicalServiceTaskDefinition
+  LikeServiceTaskDefinition:
+    Value: !Ref LikeServiceTaskDefinition
   XrayEcrRepo:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
+  MythicalLikeGitRepositoryCloneUrl:
+    Value: !GetAtt MythicalLikeGitRepository.CloneUrlHttp
+  MythicalLikeGitRepositoryName:
+    Value: !GetAtt MythicalLikeGitRepository.Name
