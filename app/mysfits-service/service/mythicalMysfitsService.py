@@ -3,6 +3,7 @@ from flask_cors import CORS
 import mysfitsTableClient
 import requests
 import json
+import os
 
 # A very basic API created using Flask that has two possible routes for requests.
 
