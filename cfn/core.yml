@@ -454,6 +454,12 @@ Resources:
             Action:
             - "ecr:InitiateLayerUpload"
             - "ecr:GetAuthorizationToken"
+            - "ecr:UploadLayerPart"
+            - "ecr:CompleteLayerUpload"
+            - "ecr:BatchCheckLayerAvailability"
+            - "ecr:PutImage"
+            - "ecr:GetDownloadUrlForLayer"
+            - "ecr:BatchGetImage"
             Resource: "*"
   
   # CodeBuild needs an S3 bucket to store artifacts in the interim.
@@ -538,7 +544,7 @@ Resources:
                 - Name: BuildArtifact
               Configuration:
                 ClusterName: !Ref MythicalEcsCluster
-                ServiceName: !Sub ${AWS::StackName}_Mythical-Like-Service
+                ServiceName: !Sub ${AWS::StackName}_Like-Service
                 FileName: imagedefinitions.json
               RunOrder: 1
               
