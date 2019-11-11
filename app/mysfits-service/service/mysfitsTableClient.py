@@ -10,6 +10,10 @@ import os
 # use the credentials associated with our ECS task role to communicate with
 # DynamoDB, so no credentials need to be stored/managed at all by our code!
 
+if (os.environ['DDB_TABLE_NAME'] != ''):
+    table = os.environ['DDB_TABLE_NAME']
+else: 
+    table = 'MysfitsTable'
 
 if (os.environ['AWS_REGION'] != ''):
     region = os.environ['AWS_REGION']
@@ -55,7 +59,7 @@ def getAllMysfits():
     # Mysfits API is low traffic and the table is very small, the scan operation
     # will suit our needs for this workshop.
     response = client.scan(
-        TableName='MysfitsTable'
+        TableName=table
     )
 
     logging.info(response["Items"])
@@ -70,7 +74,7 @@ def queryMysfitItems(filter, value):
     # Use the DynamoDB API Query to retrieve mysfits from the table that are
     # equal to the selected filter values.
     response = client.query(
-        TableName='MysfitsTable',
+        TableName=table,
         IndexName=filter+'Index',
         KeyConditions={
             filter: {
