@@ -11,7 +11,7 @@ At a high-level, during this lab we will -
 * Run AB against the stack in region A to test it is working correctly
 * Run AB against the stack in region B to test it is working correctly
 * Set the Traffic Dials within our Global Accelerator Endpoint group to split traffic 50% to each region
-* Manually failover the Traffic Dial between Regions
+* Manually failover the Traffic Dial between Regions (optional)
 * Artificially "break" the application in one region to force failover by the Global Accelerator
 
 
@@ -61,6 +61,22 @@ Once you see the widgets come to life for Region B within the Cloudwatch dashboa
 
 ### 5.3 Set the Traffic Dials within our Global Accelerator Endpoint group to split traffic 50% to each region
 
-Navigate back to the Global Accelerator Listener and modify the Endpoint groups to send 50% of traffic to Region A and 50% to Region B.
+Navigate back to the Global Accelerator Listener and modify the Endpoint groups to send 50% of traffic to Region A and 50% to Region B. By sending half the traffic to one region and half the traffic to the other, we are creating a simple yet effective multi-region setup and using the Global Accelerator as a method of easily directing traffic between the two regions. This can be useful if you need to switch between a Primary and Secondary region for DR purposes, or if you want to test out a modified version of your architecture in a different region with a limited amount of traffic passing through it.
 
 ![image](https://user-images.githubusercontent.com/23423809/68570101-b1f98c00-0414-11ea-8d75-01a1a168a693.png)
+
+Start the Apache Bench test again with the same command as previously used (or press UP on the keyboard).
+
+`watch ab http://<Insert your Global Accelerator Endpoint>/`
+
+Next, go back to the Cloudwatch dashboard, wait a few minutes and you should see metrics populate the dashboard widgets across both regions.
+
+### 5.4 Manually failover the Traffic Dial between Regions (optional)
+
+If you want to test out the Traffic Dial feature of the Global Accelerator some more, in order to become more familiar with it, now is a good time. To do this, navigate back to the Global Accelerator Listener page and modify the Traffic Dials and watch how the Cloudwatch dashboard metrics respond. For example, if you set Region A to 90% and Region B to 10%, after a few minutes you should notice substantially more traffic being served from the Region A metrics in the Cloudwatch dashboard. While in theory this sounds obvious, it is good to see it working in practice.
+
+### 5.5 Artificially "break" the application in one region to force failover
+
+[TO BE COMPLETED]
+
+Idea - Stop the task in region A, which will cause the ALB to fail its healthcheck, causing the GA to fail its healthcheck, causing the GA to force-fail traffic to the other healthy endpoints.
