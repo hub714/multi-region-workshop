@@ -346,9 +346,9 @@ Resources:
             - master
       Targets:
         -
-          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
+          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
-          Id: codepipeline-CorePipeline
+          Id: codepipeline-LikePipeline
           
   CoreServiceCodeCommitCloudWatchEventRule:
     Type: AWS::Events::Rule
@@ -370,9 +370,9 @@ Resources:
             - master
       Targets:
         -
-          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
+          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
-          Id: codepipeline-LikePipeline
+          Id: codepipeline-CorePipeline
 Outputs:
   MythicalLikeGitRepositoryCloneUrl:
     Value: !GetAtt MythicalLikeGitRepository.CloneUrlHttp
