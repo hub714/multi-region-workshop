@@ -361,5 +361,5 @@ Outputs:
     Value: !GetAtt MythicalInfraGitRepository.Name
   MythicalMysfitsServiceCodeBuildServiceRoleArn:
     Value: !GetAtt MythicalMysfitsServiceCodeBuildServiceRole.Arn
-  MythicalMysfitsServiceCodePipelineServiceRoleArn
+  MythicalMysfitsServiceCodePipelineServiceRoleArn:
     Valeu: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
