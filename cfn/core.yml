@@ -633,7 +633,7 @@ Resources:
             
             ecrclient = boto3.client('ecr')
             
-            CoreServiceEcrRepo = event.ResourceProperties.CoreServiceRepo
+            CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
             
             def handler(event, context):
                 logger.debug('Event: {}'.format(event))
@@ -643,10 +643,10 @@ Resources:
                 # Immediately respond on Delete
                 if event['RequestType'] == 'Delete':
                     try:
-                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
-                        response = ecrclient.delete_repository(
+                        responseData = ecrclient.delete_repository(
                             repositoryName=CoreServiceEcrRepo,
                             force=True)
+                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
                     except Exception as e:
                         logger.error(e, exc_info=True)
                         responseData = {'Error': traceback.format_exc(e)}
@@ -654,6 +654,16 @@ Resources:
             
                 if event['RequestType'] == 'Create':
                     try:
+                        responseData = {}
+                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
+                    except Exception as e:
+                        logger.error(e, exc_info=True)
+                        responseData = {'Error': traceback.format_exc(e)}
+                        cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
+                        
+                if event['RequestType'] == 'Update':
+                    try:
+                        responseData = {}
                         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
                     except Exception as e:
                         logger.error(e, exc_info=True)
