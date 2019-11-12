@@ -633,9 +633,10 @@ Resources:
             
             ecrclient = boto3.client('ecr')
             
-            CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
+            
             
             def handler(event, context):
+                CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
                 logger.debug('Event: {}'.format(event))
                 logger.debug('Context: {}'.format(context))
                 responseData = {}
