@@ -15,7 +15,7 @@ Resources:
     Properties: 
       RepositoryDescription: Repository for the Mythical Mysfits like service
       RepositoryName: !Sub ${AWS::StackName}-like-service
-  MythicalCoreServiceGitRepository:
+  MythicalCoreGitRepository:
     Type: AWS::CodeCommit::Repository
     Properties: 
       RepositoryDescription: Repository for the Mythical Mysfits core service
@@ -362,4 +362,4 @@ Outputs:
   MythicalMysfitsServiceCodeBuildServiceRoleArn:
     Value: !GetAtt MythicalMysfitsServiceCodeBuildServiceRole.Arn
   MythicalMysfitsServiceCodePipelineServiceRoleArn:
-    Valeu: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
+    Value: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
