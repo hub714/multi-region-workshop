@@ -6,7 +6,9 @@ Description: This stack deploys the core network infrastructure and IAM resource
 Parameters:
   MythicalEcsCluster:
     Type: String
-  EcsServiceName:
+  LikeServiceName:
+    Type: String
+  CoreServiceName:
     Type: String
 
 Resources:
@@ -363,3 +365,5 @@ Outputs:
     Value: !GetAtt MythicalMysfitsServiceCodeBuildServiceRole.Arn
   MythicalMysfitsServiceCodePipelineServiceRoleArn:
     Value: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
+  MythicalArtifactBucket:
+    Value: !GetAtt MythicalArtifactBucket
