@@ -359,3 +359,7 @@ Outputs:
     Value: !GetAtt MythicalInfraGitRepository.CloneUrlHttp
   MythicalInfraGitRepositoryName:
     Value: !GetAtt MythicalInfraGitRepository.Name
+  MythicalMysfitsServiceCodeBuildServiceRoleArn:
+    Value: !GetAtt MythicalMysfitsServiceCodeBuildServiceRole.Arn
+  MythicalMysfitsServiceCodePipelineServiceRoleArn
+    Valeu: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn

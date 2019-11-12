@@ -619,12 +619,12 @@ Outputs:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateContainerSecurityGroup' ] ]
   CodeBuildRole:
     Description: REPLACE_ME_CODEBUILD_ROLE_ARN
-    Value: !GetAtt 'MythicalMysfitsServiceCodeBuildServiceRole.Arn'
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodeBuildServiceRoleArn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodeBuildServiceRole' ] ]
   CodePipelineRole:
     Description: REPLACE_ME_CODEPIPELINE_ROLE_ARN
-    Value: !GetAtt 'MythicalMysfitsServiceCodePipelineServiceRole.Arn'
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodePipelineServiceRoleArn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
   LoadBalancerDNS:
