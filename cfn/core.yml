@@ -2,7 +2,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This stack deploys the core network infrastructure and IAM resources
              to be used for a service hosted in Amazon ECS using AWS Fargate.
-
+Parameters:
+  IsDrRegion:
+    Type: String
+    Default: False
+    AllowedValues:
+      - True
+      - False
+    Description: Choose true if this stack is being deployed in the disaster recovery (DR) region
+    
 Mappings:
   # Hard values for the subnet masks. These masks define
   # the range of internal IP addresses that can be assigned.
@@ -28,6 +36,9 @@ Mappings:
       CIDR: '10.0.2.0/24'
     PrivateTwo:
       CIDR: '10.0.3.0/24'
+
+Conditions: 
+  DrRegion: !Equals [ !Ref IsDrRegion, False ]
 
 Resources:
   # VPC in which containers will be networked.
@@ -352,6 +363,7 @@ Resources:
         - !Ref ECSTaskRole
 
   MythicalDynamoTable:
+    Condition: DrRegion
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub Table-${AWS::StackName}
@@ -394,6 +406,7 @@ Resources:
         
   MythicalEnvironment:
     Type: AWS::Cloud9::EnvironmentEC2
+    Condition: DrRegion
     Properties:
       AutomaticStopTimeMinutes: 30
       InstanceType: t2.small
@@ -558,6 +571,7 @@ Resources:
       
   MythicalCiCdStack: 
     Type: AWS::CloudFormation::Stack
+    Condition: DrRegion
     Properties: 
       TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd.yml"
       Parameters: 
@@ -720,11 +734,13 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateContainerSecurityGroup' ] ]
   CodeBuildRole:
+    Condition: DrRegion
     Description: REPLACE_ME_CODEBUILD_ROLE_ARN
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodeBuildServiceRoleArn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodeBuildServiceRole' ] ]
   CodePipelineRole:
+    Condition: DrRegion
     Description: REPLACE_ME_CODEPIPELINE_ROLE_ARN
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodePipelineServiceRoleArn'
     Export:
@@ -755,14 +771,20 @@ Outputs:
   LikeServiceTaskDefinition:
     Value: !Ref LikeServiceTaskDefinition
   MythicalLikeGitRepositoryCloneUrl:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryCloneUrl'
   MythicalLikeGitRepositoryName:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryName'
   MythicalCoreGitRepositoryCloneUrl:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryCloneUrl'
   MythicalCoreGitRepositoryName:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryName'
   MythicalInfraGitRepositoryCloneUrl:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryCloneUrl'
   MythicalInfraGitRepositoryName:
+    Condition: DrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryName'
