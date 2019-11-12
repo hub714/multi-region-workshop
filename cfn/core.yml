@@ -637,6 +637,8 @@ Resources:
             
             def handler(event, context):
                 CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
+                XrayEcrRepo = event['ResourceProperties']['XRayRepo']
+                LikeServiceEcrRepo = event['ResourceProperties']['LikeServiceRepo']
                 logger.debug('Event: {}'.format(event))
                 logger.debug('Context: {}'.format(context))
                 responseData = {}
@@ -644,10 +646,17 @@ Resources:
                 # Immediately respond on Delete
                 if event['RequestType'] == 'Delete':
                     try:
-                        responseData = ecrclient.delete_repository(
+                        coreDeleteResponse = ecrclient.delete_repository(
                             repositoryName=CoreServiceEcrRepo,
                             force=True)
+                        likeDeleteResponse = ecrclient.delete_repository(
+                            repositoryName=LikeServiceEcrRepo,
+                            force=True)
+                        xRayDeleteResponse = ecrclient.delete_repository(
+                            repositoryName=XrayEcrRepo,
+                            force=True)
                         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
+                        response = {"Core": coreDepeteResponse, "Like": likeDeleteResponse, "xRay": xRayDeleteResponse}
                     except Exception as e:
                         logger.error(e, exc_info=True)
                         responseData = {'Error': traceback.format_exc(e)}
