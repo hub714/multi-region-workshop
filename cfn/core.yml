@@ -39,6 +39,7 @@ Mappings:
 
 Conditions: 
   DrRegion: !Equals [ !Ref IsDrRegion, False ]
+  IsInDrRegionTest: !Equals [ !Ref IsDrRegion, True ]
 
 Resources:
   # VPC in which containers will be networked.
@@ -345,6 +346,8 @@ Resources:
                 - 'dynamodb:UpdateItem'
                 - 'dynamodb:GetItem'
               Resource: !GetAtt MythicalDynamoTable.Arn
+            #  Removing this for now to test with multi-region^
+              # Resource: '*'
               
             - Effect: Allow
               Action:
@@ -363,7 +366,7 @@ Resources:
         - !Ref ECSTaskRole
 
   MythicalDynamoTable:
-    Condition: DrRegion
+    # Condition: DrRegion
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub Table-${AWS::StackName}
@@ -578,6 +581,28 @@ Resources:
         MythicalEcsCluster: !Ref MythicalEcsCluster
         CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
         LikeServiceName: !Sub ${AWS::StackName}_Like-Service
+        
+  MythicalCoreEcsService:
+    Condition: IsInDrRegionTest
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref MythicalServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration: 
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref FargateContainerSecurityGroup
+          Subnets: 
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
+        
   
   # Working on a function to delete all extra stuff - disregard for now
   # CleanDeletionCustomResource:
@@ -749,6 +774,7 @@ Outputs:
     Description: The DNS for the load balancer
     Value: !GetAtt MythicalLoadBalancer.DNSName
   DynamoTable:
+    # Condition: DrRegion
     Value: !Ref MythicalDynamoTable
   ProfileName:
     Value: !Ref MythicalProfile

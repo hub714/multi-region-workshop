@@ -161,25 +161,25 @@ Resources:
       Name: !Sub ${AWS::StackName}-like-service-build
       ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
   
-  # CoreBuildCodeBuildProject:
-  #   Type: AWS::CodeBuild::Project
-  #   Properties:
-  #     Artifacts:
-  #       Type: "CODEPIPELINE"
-  #     Source:
-  #       Type: "CODEPIPELINE"
-  #       BuildSpec: "buildspec_prod.yml"
-  #     Environment:
-  #       PrivilegedMode: true
-  #       ComputeType: "BUILD_GENERAL1_SMALL"
-  #       Image: "aws/codebuild/docker:17.09.0"
-  #       Type: "LINUX_CONTAINER"
-  #       EnvironmentVariables:
-  #       - Name: AWS_ACCOUNT_ID
-  #         Value: !Ref AWS::AccountId
-  #         Type: PLAINTEXT
-  #     Name: !Sub ${AWS::StackName}-core-service-build
-  #     ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
+  CoreBuildCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: "CODEPIPELINE"
+      Source:
+        Type: "CODEPIPELINE"
+        BuildSpec: "buildspec_prod.yml"
+      Environment:
+        PrivilegedMode: true
+        ComputeType: "BUILD_GENERAL1_SMALL"
+        Image: "aws/codebuild/docker:17.09.0"
+        Type: "LINUX_CONTAINER"
+        EnvironmentVariables:
+        - Name: AWS_ACCOUNT_ID
+          Value: !Ref AWS::AccountId
+          Type: PLAINTEXT
+      Name: !Sub ${AWS::StackName}-core-service-build
+      ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
   
   # CodePipeline for deployments. Uses CodeCommit + CodeBuild + ECS, deploying
   # to an existing ECS service. It looks for imagedefinitions.json as well as 
@@ -277,7 +277,7 @@ Resources:
               OutputArtifacts:
                 - Name: BuildArtifact
               Configuration:
-                ProjectName: !Ref DockerBuildCodeBuildProject
+                ProjectName: !Ref CoreBuildCodeBuildProject
               RunOrder: 1
         - Name: Deploy
           Actions:
@@ -321,8 +321,9 @@ Resources:
               -
                 Effect: Allow
                 Action: codepipeline:StartPipelineExecution
-                Resource: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
-  
+                Resource: 
+                  - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
+                  - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
   # Actual CWE Rule to push changes over to CodePipeline.
                             
   CodeCommitCloudWatchEventRule:
@@ -335,6 +336,30 @@ Resources:
           - 'CodeCommit Repository State Change'
         resources:
           - !GetAtt MythicalLikeGitRepository.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - master
+      Targets:
+        -
+          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
+          RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
+          Id: codepipeline-CorePipeline
+          
+  CoreServiceCodeCommitCloudWatchEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - 'CodeCommit Repository State Change'
+        resources:
+          - !GetAtt MythicalCoreGitRepository.Arn
         detail:
           event:
             - referenceCreated
