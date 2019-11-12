@@ -366,4 +366,4 @@ Outputs:
   MythicalMysfitsServiceCodePipelineServiceRoleArn:
     Value: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
   MythicalArtifactBucket:
-    Value: !GetAtt MythicalArtifactBucket
+    Value: !Ref MythicalArtifactBucket
