@@ -638,6 +638,8 @@ Outputs:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
   LikeServiceEcrRepo:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
+  XrayEcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup
   LikeServiceTargetGroupArn:
@@ -650,9 +652,15 @@ Outputs:
     Value: !Ref MythicalServiceTaskDefinition
   LikeServiceTaskDefinition:
     Value: !Ref LikeServiceTaskDefinition
-  XrayEcrRepo:
-    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalLikeGitRepositoryCloneUrl:
-    Value: !GetAtt MythicalLikeGitRepository.CloneUrlHttp
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryCloneUrl'
   MythicalLikeGitRepositoryName:
-    Value: !GetAtt MythicalLikeGitRepository.Name
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryName'
+  MythicalCoreGitRepositoryCloneUrl:
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryCloneUrl'
+  MythicalCoreGitRepositoryName:
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryName'
+  MythicalInfraGitRepositoryCloneUrl:
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryCloneUrl'
+  MythicalInfraGitRepositoryName:
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryName'

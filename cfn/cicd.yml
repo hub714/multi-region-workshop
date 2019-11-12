@@ -1,3 +1,14 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This stack deploys the core network infrastructure and IAM resources
+             to be used for a service hosted in Amazon ECS using AWS Fargate.
+
+Parameters:
+  MythicalEcsCluster:
+    Type: String
+  EcsServiceName:
+    Type: String
+
 Resources:
   MythicalLikeGitRepository:
     Type: AWS::CodeCommit::Repository
@@ -335,3 +346,16 @@ Resources:
           Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
           Id: codepipeline-LikePipeline
+Outputs:
+  MythicalLikeGitRepositoryCloneUrl:
+    Value: !GetAtt MythicalLikeGitRepository.CloneUrlHttp
+  MythicalLikeGitRepositoryName:
+    Value: !GetAtt MythicalLikeGitRepository.Name
+  MythicalCoreGitRepositoryCloneUrl:
+    Value: !GetAtt MythicalCoreGitRepository.CloneUrlHttp
+  MythicalCoreGitRepositoryName:
+    Value: !GetAtt MythicalCoreGitRepository.Name
+  MythicalInfraGitRepositoryCloneUrl:
+    Value: !GetAtt MythicalInfraGitRepository.CloneUrlHttp
+  MythicalInfraGitRepositoryName:
+    Value: !GetAtt MythicalInfraGitRepository.Name
