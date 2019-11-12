@@ -618,7 +618,7 @@ Resources:
       XRayRepo: !Ref Xray
       EcsServiceName: !Sub ${AWS::StackName}_Mythical-Service
   
-  Actual Lambda function to delete stuff
+  #Actual Lambda function to delete stuff
   AddRoleToInstanceFunction:
       Type: AWS::Lambda::Function
       Properties:
