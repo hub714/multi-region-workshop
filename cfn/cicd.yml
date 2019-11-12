@@ -236,7 +236,7 @@ Resources:
                 - Name: BuildArtifact
               Configuration:
                 ClusterName: !Ref MythicalEcsCluster
-                ServiceName: !Sub ${AWS::StackName}_Like-Service
+                ServiceName: !Ref LikeServiceName
                 FileName: imagedefinitions.json
               RunOrder: 1
               
@@ -291,7 +291,7 @@ Resources:
                 - Name: BuildArtifact
               Configuration:
                 ClusterName: !Ref MythicalEcsCluster
-                ServiceName: !Sub ${AWS::StackName}_Like-Service
+                ServiceName: !Ref CoreServiceName
                 FileName: imagedefinitions.json
               RunOrder: 1
               
