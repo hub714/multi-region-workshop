@@ -612,11 +612,11 @@ Resources:
       ServiceToken: !GetAtt CleanDeletionLambdaFunction.Arn
       Region: !Ref AWS::Region
       StackName: !Ref AWS::StackName
-      S3Bucket: !GetAtt 'MythicalCiCdStack.Outputs.MythicalArtifactBucket'
+      MythicalArtifactBucket: !GetAtt 'MythicalCiCdStack.Outputs.MythicalArtifactBucket'
       CoreServiceRepo: !Ref MythicalServiceRepo
       LikeServiceRepo: !Ref LikeServiceRepo
       XRayRepo: !Ref Xray
-      EcsServiceName: !Sub ${AWS::StackName}_Mythical-Service
+      EcsClusterName: !Ref MythicalEcsCluster
   
   #Actual Lambda function to delete stuff
   CleanDeletionLambdaFunction:
@@ -631,14 +631,19 @@ Resources:
             logger = logging.getLogger()
             logger.setLevel(logging.INFO)
             
-            ecrclient = boto3.client('ecr')
-            
-            
+            ecrClient = boto3.client('ecr')
+            ecsClient = boto3.client('ecs')
+            s3 = boto3.resource('s3')
             
             def handler(event, context):
+                
                 CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
                 XrayEcrRepo = event['ResourceProperties']['XRayRepo']
                 LikeServiceEcrRepo = event['ResourceProperties']['LikeServiceRepo']
+                EcsClusterName = event['ResourceProperties']['EcsClusterName']
+                MythicalArtifactBucket = event['ResourceProperties']['MythicalArtifactBucket']
+                CfnStackName = event['ResourceProperties']['CfnStackName']
+                
                 logger.debug('Event: {}'.format(event))
                 logger.debug('Context: {}'.format(context))
                 responseData = {}
@@ -646,17 +651,36 @@ Resources:
                 # Immediately respond on Delete
                 if event['RequestType'] == 'Delete':
                     try:
-                        coreDeleteResponse = ecrclient.delete_repository(
+                        coreDeleteResponse = ecrClient.delete_repository(
                             repositoryName=CoreServiceEcrRepo,
                             force=True)
-                        likeDeleteResponse = ecrclient.delete_repository(
+                        likeDeleteResponse = ecrClient.delete_repository(
                             repositoryName=LikeServiceEcrRepo,
                             force=True)
-                        xRayDeleteResponse = ecrclient.delete_repository(
+                        xRayDeleteResponse = ecrClient.delete_repository(
                             repositoryName=XrayEcrRepo,
                             force=True)
+                            
+                        bucket = s3.Bucket(MythicalArtifactBucket)
+                        
+                        # Delete S3 bucket
+                        for key in bucket.objects.all():
+                          key.delete()
+                        bucket.delete()  
+                        
+                        # List ECS Services and delete services in a specific cluster
+                        
+                        ecsLikeDeleteResponse = ecsClient.delete_service(
+                            cluster=EcsClusterName,
+                            service=CfnStackName+'_Like-Service',
+                            force=True)
+                        ecsCoreDeleteResponse = ecsClient.delete_service(
+                            cluster=EcsClusterName,
+                            service=CfnStackName+'_Mythical-Service',
+                            force=True)
+                        
+                        responseData = {"Core": coreDepeteResponse, "Like": likeDeleteResponse, "xRay": xRayDeleteResponse}
                         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
-                        response = {"Core": coreDepeteResponse, "Like": likeDeleteResponse, "xRay": xRayDeleteResponse}
                     except Exception as e:
                         logger.error(e, exc_info=True)
                         responseData = {'Error': traceback.format_exc(e)}
@@ -716,6 +740,15 @@ Resources:
             Action:
             - ecr:*
             Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:DeleteObject
+            - s3:DeleteBucket
+            Resource: !Sub arn:aws:s3:::${MythicalArtifactBucket}
+          - Effect: Allow
+            Action:
+            - ecs:DeleteService
+            Resource: !Sub arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/${MythicalEcsCluster}/*
       
 
 # These are the values output by the CloudFormation template. Be careful
