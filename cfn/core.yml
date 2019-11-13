@@ -636,7 +636,8 @@ Resources:
             s3 = boto3.resource('s3')
             
             def handler(event, context):
-                
+                print('Response URL: '+event['ResponseURL'])
+                print('RequestID: '+event['RequestId'])
                 CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
                 XrayEcrRepo = event['ResourceProperties']['XRayRepo']
                 LikeServiceEcrRepo = event['ResourceProperties']['LikeServiceRepo']
@@ -669,17 +670,17 @@ Resources:
                         bucket.delete()  
                         
                         # List ECS Services and delete services in a specific cluster
-                        
-                        ecsLikeDeleteResponse = ecsClient.delete_service(
-                            cluster=EcsClusterName,
-                            service=CfnStackName+'_Like-Service',
-                            force=True)
-                        ecsCoreDeleteResponse = ecsClient.delete_service(
-                            cluster=EcsClusterName,
-                            service=CfnStackName+'_Mythical-Service',
-                            force=True)
-                        
-                        responseData = {"Core": coreDepeteResponse, "Like": likeDeleteResponse, "xRay": xRayDeleteResponse}
+                        ecsServicesToDelete = ecsClient.list_services(
+                            cluster=EcsClusterName
+                        )
+                        if ecsServicesToDelete['serviceArns'] != []:
+                            for serviceName in ecsServicesToDelete['serviceArns']:
+                                ecsDeleteResponse = ecsClient.delete_service(
+                                    cluster='Cluster-mr-test',
+                                    service=serviceName,
+                                    force=True)
+                            
+                        responseData = {}
                         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
                     except Exception as e:
                         logger.error(e, exc_info=True)
@@ -738,12 +739,17 @@ Resources:
           - Effect: Allow
             Action:
             - ecr:*
+            - ecs:ListServices
             Resource: '*'
           - Effect: Allow
             Action:
             - s3:DeleteObject
             - s3:DeleteBucket
-            Resource: !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}
+            - s3:ListObjects
+            - s3:ListBucket
+            Resource: 
+            - !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}
+            - !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}/*
           - Effect: Allow
             Action:
             - ecs:DeleteService
