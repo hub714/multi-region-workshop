@@ -16,17 +16,17 @@ Resources:
     Type: AWS::CodeCommit::Repository
     Properties: 
       RepositoryDescription: Repository for the Mythical Mysfits like service
-      RepositoryName: !Sub ${AWS::StackName}-like-service
+      RepositoryName: !Sub like-service-${AWS::StackName}
   MythicalCoreGitRepository:
     Type: AWS::CodeCommit::Repository
     Properties: 
       RepositoryDescription: Repository for the Mythical Mysfits core service
-      RepositoryName: !Sub ${AWS::StackName}-core-service
+      RepositoryName: !Sub core-service-${AWS::StackName}
   MythicalInfraGitRepository:
     Type: AWS::CodeCommit::Repository
     Properties: 
       RepositoryDescription: Repository for the Mythical Mysfits infrastructure
-      RepositoryName: !Sub ${AWS::StackName}-Infra
+      RepositoryName: !Sub Infra-${AWS::StackName}
 
 
   # An IAM role that allows the AWS CodePipeline service to perform its
