@@ -9,7 +9,7 @@ CORE_ECR_REPO_URI=$(jq < cfn-output.json -r '.MythicalServiceEcrRepo')
 cp -R app/like-service/* ~/environment/$LIKE_REPO_NAME/
 sed -i -e 's;REPLACEME_REPO_URI;'"$LIKE_ECR_REPO_URI"';' ~/environment/$LIKE_REPO_NAME/buildspec_prod.yml
 cp -R app/mysfits-service/* ~/environment/$CORE_REPO_NAME/
-sed -i -e 's;REPLACEME_REPO_URI;'"$CORE_ECR_REPO_URI"';' ~/environment/$CORE_REPO_NAME/buildspec.yml
+sed -i -e 's;REPLACEME_REPO_URI;'"$CORE_ECR_REPO_URI"';' ~/environment/$CORE_REPO_NAME/buildspec_prod.yml
 
 cd ~/environment/$LIKE_REPO_NAME/
 git add -A
