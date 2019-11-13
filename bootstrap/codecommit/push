@@ -1,20 +1,22 @@
 #!/bin/bash
 
 LIKE_REPO_NAME=$(jq < cfn-output.json -r '.MythicalLikeGitRepositoryName')
-#MONOLITH_REPO_NAME=$(jq < cfn-output.json -r '.MythicalMonolithGitRepositoryName')
+CORE_REPO_NAME=$(jq < cfn-output.json -r '.MythicalCoreGitRepositoryName')
 
 LIKE_ECR_REPO_URI=$(jq < cfn-output.json -r '.LikeServiceEcrRepo')
+CORE_ECR_REPO_URI=$(jq < cfn-output.json -r '.MythicalServiceEcrRepo')
 
 cp -R app/like-service/* ~/environment/$LIKE_REPO_NAME/
 sed -i -e 's;REPLACEME_REPO_URI;'"$LIKE_ECR_REPO_URI"';' ~/environment/$LIKE_REPO_NAME/buildspec_prod.yml
-#cp -R app/monolith-service/* ~/environment/$MONOLITH_REPO_NAME/
+cp -R app/mysfits-service/* ~/environment/$CORE_REPO_NAME/
+sed -i -e 's;REPLACEME_REPO_URI;'"$CORE_ECR_REPO_URI"';' ~/environment/$CORE_REPO_NAME/buildspec_prod.yml
 
 cd ~/environment/$LIKE_REPO_NAME/
 git add -A
 git commit -m "Initial Commit of Like Service"
 git push origin master
 
-#cd ~/environment/$MONOLITH_REPO_NAME/
-#git add -A
-#git commit -m "Initial Commit of Monolith Service"
-#git push origin master
+cd ~/environment/$CORE_REPO_NAME/
+git add -A
+git commit -m "Initial Commit of Core Service"
+git push origin master

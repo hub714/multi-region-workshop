@@ -1,1 +1,4 @@
 cfn-output.json
+deploy
+.gitignore
+*.DS_Store

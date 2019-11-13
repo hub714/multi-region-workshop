@@ -2,7 +2,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: This stack deploys the core network infrastructure and IAM resources
              to be used for a service hosted in Amazon ECS using AWS Fargate.
-
+Parameters:
+  IsDrRegion:
+    Type: String
+    Default: False
+    AllowedValues:
+      - True
+      - False
+    Description: Choose true if this stack is being deployed in the disaster recovery (DR) region
+    
 Mappings:
   # Hard values for the subnet masks. These masks define
   # the range of internal IP addresses that can be assigned.
@@ -28,6 +36,10 @@ Mappings:
       CIDR: '10.0.2.0/24'
     PrivateTwo:
       CIDR: '10.0.3.0/24'
+
+Conditions: 
+  DrRegion: !Equals [ !Ref IsDrRegion, False ]
+  IsInDrRegionTest: !Equals [ !Ref IsDrRegion, True ]
 
 Resources:
   # VPC in which containers will be networked.
@@ -334,6 +346,8 @@ Resources:
                 - 'dynamodb:UpdateItem'
                 - 'dynamodb:GetItem'
               Resource: !GetAtt MythicalDynamoTable.Arn
+            #  Removing this for now to test with multi-region^
+              # Resource: '*'
               
             - Effect: Allow
               Action:
@@ -351,258 +365,8 @@ Resources:
       Roles:
         - !Ref ECSTaskRole
 
-  MythicalLikeGitRepository:
-    Type: AWS::CodeCommit::Repository
-    Properties: 
-      RepositoryDescription: Repository for the Mythical Mysfits like service
-      RepositoryName: !Sub ${AWS::StackName}-like-service
-
-  # An IAM role that allows the AWS CodePipeline service to perform its
-  # necessary actions. We have intentionally left permissions on this role
-  # that will not be used by the CodePipeline service during this workshop.
-  # This will allow you to more simply use CodePipeline in the future should
-  # you want to use the service for Pipelines that interact with different
-  # AWS services than the ones used in this workshop.
-  MythicalMysfitsServiceCodePipelineServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: MythicalMysfitsServiceCodePipelineServiceRole
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - codepipeline.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: "/"
-      Policies:
-      - PolicyName: MythicalMysfitsService-codepipeline-service-policy
-        PolicyDocument:
-          Statement:
-          - Action:
-            - codecommit:GetBranch
-            - codecommit:GetCommit
-            - codecommit:UploadArchive
-            - codecommit:GetUploadArchiveStatus
-            - codecommit:CancelUploadArchive
-            Resource: "*"
-            Effect: Allow
-          - Action:
-            - s3:GetObject
-            - s3:GetObjectVersion
-            - s3:GetBucketVersioning
-            Resource: "*"
-            Effect: Allow
-          - Action:
-            - s3:PutObject
-            Resource: "*"
-            Effect: Allow
-          - Action:
-            - elasticloadbalancing:*
-            - autoscaling:*
-            - cloudwatch:*
-            - ecs:*
-            - codebuild:*
-            - iam:PassRole
-            Resource: "*"
-            Effect: Allow
-          Version: "2012-10-17"
-
-  # An IAM role that allows the AWS CodeBuild service to perform the actions
-  # required to complete a build of our source code retrieved from CodeCommit,
-  # and push the created image to ECR.
-  MythicalMysfitsServiceCodeBuildServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: MythicalMysfitsServiceCodeBuildServiceRole
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: codebuild.amazonaws.com
-          Action: sts:AssumeRole
-      Policies:
-      - PolicyName: "MythicalMysfitsService-CodeBuildServicePolicy"
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-          - Effect: "Allow"
-            Action:
-            - "codecommit:ListBranches"
-            - "codecommit:ListRepositories"
-            - "codecommit:BatchGetRepositories"
-            - "codecommit:Get*"
-            - "codecommit:GitPull"
-            Resource:
-            - Fn::Sub: arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:MythicalMysfitsServiceRepository
-          - Effect: "Allow"
-            Action:
-            - "logs:CreateLogGroup"
-            - "logs:CreateLogStream"
-            - "logs:PutLogEvents"
-            Resource: "*"
-          - Effect: "Allow"
-            Action:
-            - "s3:PutObject"
-            - "s3:GetObject"
-            - "s3:GetObjectVersion"
-            - "s3:ListBucket"
-            Resource: "*"
-          - Effect: "Allow"
-            Action:
-            - "ecr:InitiateLayerUpload"
-            - "ecr:GetAuthorizationToken"
-            - "ecr:UploadLayerPart"
-            - "ecr:CompleteLayerUpload"
-            - "ecr:BatchCheckLayerAvailability"
-            - "ecr:PutImage"
-            - "ecr:GetDownloadUrlForLayer"
-            - "ecr:BatchGetImage"
-            Resource: "*"
-  
-  # CodeBuild needs an S3 bucket to store artifacts in the interim.
-  MythicalArtifactBucket:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Delete 
-  
-  # Actual CodeBuild project that builds the Docker images and outputs imagedefinitions.json 
-  
-  DockerBuildCodeBuildProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Artifacts:
-        Type: "CODEPIPELINE"
-      Source:
-        Type: "CODEPIPELINE"
-        BuildSpec: "buildspec_prod.yml"
-      Environment:
-        PrivilegedMode: true
-        ComputeType: "BUILD_GENERAL1_SMALL"
-        Image: "aws/codebuild/docker:17.09.0"
-        Type: "LINUX_CONTAINER"
-        EnvironmentVariables:
-        - Name: AWS_ACCOUNT_ID
-          Value: !Ref AWS::AccountId
-          Type: PLAINTEXT
-      Name: !Sub ${AWS::StackName}-like-service-build
-      ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
-  
-  # CodePipeline for deployments. Uses CodeCommit + CodeBuild + ECS, deploying
-  # to an existing ECS service. It looks for imagedefinitions.json as well as 
-  # buildspec_prod for this
-  
-  MythicalLikeServicePipeline:
-    Type: 'AWS::CodePipeline::Pipeline'
-    Properties:
-      ArtifactStore:
-        Type: S3
-        Location: !Ref MythicalArtifactBucket
-      Name: !Sub ${AWS::StackName}
-      RoleArn: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
-      Stages:
-        - Name: 'Source'
-          Actions:
-            - Name: 'Source'
-              ActionTypeId:
-                Category: 'Source'
-                Owner: 'AWS'
-                Version: '1'
-                Provider: 'CodeCommit'
-              OutputArtifacts:
-                - Name: SourceArtifact
-              Configuration:
-                PollForSourceChanges: 'false'
-                BranchName: master
-                RepositoryName: !GetAtt MythicalLikeGitRepository.Name
-              RunOrder: 1
-        - Name: 'Build_Docker_Container'
-          Actions:
-            - Name: CodeBuild
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: 1
-                Provider: CodeBuild
-              InputArtifacts:
-                - Name: SourceArtifact
-              OutputArtifacts:
-                - Name: BuildArtifact
-              Configuration:
-                ProjectName: !Ref DockerBuildCodeBuildProject
-              RunOrder: 1
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Version: 1
-                Provider: ECS
-              InputArtifacts:
-                - Name: BuildArtifact
-              Configuration:
-                ClusterName: !Ref MythicalEcsCluster
-                ServiceName: !Sub ${AWS::StackName}_Like-Service
-                FileName: imagedefinitions.json
-              RunOrder: 1
-              
-  # CodePipeline does not automatically create this for you as part of 
-  # creation, but this role is for the CWE Hook to trigger CodePipeline once 
-  # there's an update in CodeCommit. Otherwise, we have to have CodePipeline  
-  # poll for changes, which is slower.            
-  CodeCommitCloudWatchEventRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          -
-            Effect: Allow
-            Principal:
-              Service:
-                - events.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      Policies:
-        -
-          PolicyName: cwe-pipeline-execution
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              -
-                Effect: Allow
-                Action: codepipeline:StartPipelineExecution
-                Resource: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
-  
-  # Actual CWE Rule to push changes over to CodePipeline.
-                            
-  CodeCommitCloudWatchEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - !GetAtt MythicalLikeGitRepository.Arn
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        -
-          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
-          RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
-          Id: codepipeline-LikePipeline
-
   MythicalDynamoTable:
+    # Condition: DrRegion
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub Table-${AWS::StackName}
@@ -645,6 +409,7 @@ Resources:
         
   MythicalEnvironment:
     Type: AWS::Cloud9::EnvironmentEC2
+    Condition: DrRegion
     Properties:
       AutomaticStopTimeMinutes: 30
       InstanceType: t2.small
@@ -806,6 +571,190 @@ Resources:
         - "/mysfits/*/like"
       ListenerArn: !Ref MythicalListener
       Priority: 1
+      
+  MythicalCiCdStack: 
+    Type: AWS::CloudFormation::Stack
+    Condition: DrRegion
+    Properties: 
+      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd.yml"
+      Parameters: 
+        MythicalEcsCluster: !Ref MythicalEcsCluster
+        CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
+        LikeServiceName: !Sub ${AWS::StackName}_Like-Service
+        
+  MythicalCoreEcsService:
+    Condition: IsInDrRegionTest
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref MythicalServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration: 
+          AssignPublicIp: DISABLED
+          SecurityGroups: 
+            - !Ref FargateContainerSecurityGroup
+          Subnets: 
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
+        
+  
+  # Working on a function to delete all extra stuff - disregard for now
+  CleanDeletionCustomResource:
+    Type: Custom::CleanDelete
+    DependsOn: CleanDeletionLambdaFunction
+    Properties:
+      ServiceToken: !GetAtt CleanDeletionLambdaFunction.Arn
+      Region: !Ref AWS::Region
+      CfnStackName: !Ref AWS::StackName
+      MythicalArtifactBucket: !GetAtt 'MythicalCiCdStack.Outputs.MythicalArtifactBucket'
+      CoreServiceRepo: !Ref MythicalServiceRepo
+      LikeServiceRepo: !Ref LikeServiceRepo
+      XRayRepo: !Ref Xray
+      EcsClusterName: !Ref MythicalEcsCluster
+  
+  #Actual Lambda function to delete stuff
+  CleanDeletionLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Code:
+          ZipFile: !Sub | 
+            from __future__ import print_function
+            import boto3
+            import logging
+            import cfnresponse
+            logger = logging.getLogger()
+            logger.setLevel(logging.INFO)
+            
+            ecrClient = boto3.client('ecr')
+            ecsClient = boto3.client('ecs')
+            s3 = boto3.resource('s3')
+            
+            def handler(event, context):
+                print('Response URL: '+event['ResponseURL'])
+                print('RequestID: '+event['RequestId'])
+                CoreServiceEcrRepo = event['ResourceProperties']['CoreServiceRepo']
+                XrayEcrRepo = event['ResourceProperties']['XRayRepo']
+                LikeServiceEcrRepo = event['ResourceProperties']['LikeServiceRepo']
+                EcsClusterName = event['ResourceProperties']['EcsClusterName']
+                MythicalArtifactBucket = event['ResourceProperties']['MythicalArtifactBucket']
+                CfnStackName = event['ResourceProperties']['CfnStackName']
+                
+                logger.debug('Event: {}'.format(event))
+                logger.debug('Context: {}'.format(context))
+                responseData = {}
+            
+                # Immediately respond on Delete
+                if event['RequestType'] == 'Delete':
+                    try:
+                        coreDeleteResponse = ecrClient.delete_repository(
+                            repositoryName=CoreServiceEcrRepo,
+                            force=True)
+                        likeDeleteResponse = ecrClient.delete_repository(
+                            repositoryName=LikeServiceEcrRepo,
+                            force=True)
+                        xRayDeleteResponse = ecrClient.delete_repository(
+                            repositoryName=XrayEcrRepo,
+                            force=True)
+                            
+                        bucket = s3.Bucket(MythicalArtifactBucket)
+                        
+                        # Delete S3 bucket
+                        for key in bucket.objects.all():
+                          key.delete()
+                        bucket.delete()  
+                        
+                        # List ECS Services and delete services in a specific cluster
+                        ecsServicesToDelete = ecsClient.list_services(
+                            cluster=EcsClusterName
+                        )
+                        if ecsServicesToDelete['serviceArns'] != []:
+                            for serviceName in ecsServicesToDelete['serviceArns']:
+                                ecsDeleteResponse = ecsClient.delete_service(
+                                    cluster='Cluster-mr-test',
+                                    service=serviceName,
+                                    force=True)
+                            
+                        responseData = {}
+                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
+                    except Exception as e:
+                        logger.error(e, exc_info=True)
+                        responseData = {'Error': traceback.format_exc(e)}
+                        cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
+            
+                if event['RequestType'] == 'Create':
+                    try:
+                        responseData = {}
+                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
+                    except Exception as e:
+                        logger.error(e, exc_info=True)
+                        responseData = {'Error': traceback.format_exc(e)}
+                        cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
+                        
+                if event['RequestType'] == 'Update':
+                    try:
+                        responseData = {}
+                        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, 'CustomResourcePhysicalID')
+                    except Exception as e:
+                        logger.error(e, exc_info=True)
+                        responseData = {'Error': traceback.format_exc(e)}
+                        cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
+        Handler: index.handler
+        Role:
+          Fn::GetAtt:
+          - LambdaExecutionRole
+          - Arn
+        Runtime: python3.7
+        Timeout: '300'
+        
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - ecr:*
+            - ecs:ListServices
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:DeleteObject
+            - s3:DeleteBucket
+            - s3:ListObjects
+            - s3:ListBucket
+            Resource: 
+            - !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}
+            - !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}/*
+          - Effect: Allow
+            Action:
+            - ecs:DeleteService
+            Resource: !Sub arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/${MythicalEcsCluster}/*
+      
 
 # These are the values output by the CloudFormation template. Be careful
 # about changing any of them, because of them are exported with specific
@@ -862,19 +811,22 @@ Outputs:
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'FargateContainerSecurityGroup' ] ]
   CodeBuildRole:
+    Condition: DrRegion
     Description: REPLACE_ME_CODEBUILD_ROLE_ARN
-    Value: !GetAtt 'MythicalMysfitsServiceCodeBuildServiceRole.Arn'
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodeBuildServiceRoleArn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodeBuildServiceRole' ] ]
   CodePipelineRole:
+    Condition: DrRegion
     Description: REPLACE_ME_CODEPIPELINE_ROLE_ARN
-    Value: !GetAtt 'MythicalMysfitsServiceCodePipelineServiceRole.Arn'
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalMysfitsServiceCodePipelineServiceRoleArn'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
   LoadBalancerDNS:
     Description: The DNS for the load balancer
     Value: !GetAtt MythicalLoadBalancer.DNSName
   DynamoTable:
+    # Condition: DrRegion
     Value: !Ref MythicalDynamoTable
   ProfileName:
     Value: !Ref MythicalProfile
@@ -882,6 +834,8 @@ Outputs:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
   LikeServiceEcrRepo:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
+  XrayEcrRepo:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup
   LikeServiceTargetGroupArn:
@@ -894,9 +848,21 @@ Outputs:
     Value: !Ref MythicalServiceTaskDefinition
   LikeServiceTaskDefinition:
     Value: !Ref LikeServiceTaskDefinition
-  XrayEcrRepo:
-    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalLikeGitRepositoryCloneUrl:
-    Value: !GetAtt MythicalLikeGitRepository.CloneUrlHttp
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryCloneUrl'
   MythicalLikeGitRepositoryName:
-    Value: !GetAtt MythicalLikeGitRepository.Name
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryName'
+  MythicalCoreGitRepositoryCloneUrl:
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryCloneUrl'
+  MythicalCoreGitRepositoryName:
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalCoreGitRepositoryName'
+  MythicalInfraGitRepositoryCloneUrl:
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryCloneUrl'
+  MythicalInfraGitRepositoryName:
+    Condition: DrRegion
+    Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalInfraGitRepositoryName'
