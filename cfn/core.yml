@@ -744,7 +744,7 @@ Resources:
             Action:
             - s3:DeleteObject
             - s3:DeleteBucket
-            Resource: !Sub arn:aws:s3:::${MythicalArtifactBucket}
+            Resource: !Sub arn:aws:s3:::${MythicalCiCdStack.Outputs.MythicalArtifactBucket}
           - Effect: Allow
             Action:
             - ecs:DeleteService
