@@ -611,7 +611,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt CleanDeletionLambdaFunction.Arn
       Region: !Ref AWS::Region
-      StackName: !Ref AWS::StackName
+      CfnStackName: !Ref AWS::StackName
       MythicalArtifactBucket: !GetAtt 'MythicalCiCdStack.Outputs.MythicalArtifactBucket'
       CoreServiceRepo: !Ref MythicalServiceRepo
       LikeServiceRepo: !Ref LikeServiceRepo
@@ -703,7 +703,6 @@ Resources:
                         logger.error(e, exc_info=True)
                         responseData = {'Error': traceback.format_exc(e)}
                         cfnresponse.send(event, context, cfnresponse.FAILED, responseData, 'CustomResourcePhysicalID')
-  
         Handler: index.handler
         Role:
           Fn::GetAtt:
