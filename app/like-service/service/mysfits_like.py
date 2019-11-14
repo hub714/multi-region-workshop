@@ -12,11 +12,15 @@ import mysfitsTableClient
 # [TODO] load x-ray recorder module
 # [TODO] load middleware module for incoming requests
 
-loglevel = os.environ['LOGLEVEL'].upper()
+if 'LOGLEVEL' in os.environ:
+    loglevel = os.environ['LOGLEVEL'].upper()
+else:
+    loglevel = 'ERROR'
+
+logging.basicConfig(level=loglevel)
 
 app = Flask(__name__)
 CORS(app)
-app.config['DEBUG'] = True
 app.logger
 
 # [TODO] x-ray recorder config to label segments as 'like service'

@@ -4,11 +4,19 @@ import mysfitsTableClient
 import requests
 import json
 import os
+import logging
 
 # A very basic API created using Flask that has two possible routes for requests.
+if 'LOGLEVEL' in os.environ:
+    loglevel = os.environ['LOGLEVEL'].upper()
+else:
+    loglevel = 'ERROR'
+
+logging.basicConfig(level=loglevel)
 
 app = Flask(__name__)
 CORS(app)
+app.logger
 
 if (os.environ['AWS_REGION'] != ''):
     region = os.environ['AWS_REGION']
@@ -82,6 +90,10 @@ def mainSite():
                         <b>Good/Evil:</b> {{mysfit.goodevil}}
                         <br>
                         <b>Lawful/Chaotic:</b> {{mysfit.lawchaos}}
+                        <span style="float:right;">
+                          <img id="{{mysfit.mysfitId}}LikeIcon" ng-click="likeClicked(mysfit.mysfitId)" src="https://www.mythicalmysfits.com/images/like_icon_false.png" onmouseover="" style="cursor: pointer;">
+                          <img id="{{mysfit.mysfitId}}AlreadyLikedIcon" class="d-none" src="https://www.mythicalmysfits.com/images/like_icon_true.png" >
+                        </span>
                       </p>
                   </div>
                 </div>
@@ -95,7 +107,8 @@ def mainSite():
           <script>
                     
             var mysfitsApiEndpoint = 'REPLACE_ME_API_ENDPOINT';
-        
+            //var mysfitsApiEndpoint = 'http://localhost:8080'
+
             var app = angular.module('mysfitsApp', []);
         
             var gridScope;
@@ -167,6 +180,11 @@ def mainSite():
               gridScope = $scope;
         
               getAllMysfits(applyGridScope);
+
+              $scope.likeClicked = function(mysfitId) {
+                console.log("clicked: " + mysfitId);
+                likeMysfit(mysfitId, updateLikeIcons);
+              }
         
             });
         
@@ -190,7 +208,39 @@ def mainSite():
                 }
               });
             }
+
+            function updateLikeIcons(mysfitId) {
+              likeIconId = "#" + mysfitId + "LikeIcon";
+              $(likeIconId).addClass("d-none");
+              alreadyLikedIconId = "#" + mysfitId + "AlreadyLikedIcon";
+              $(alreadyLikedIconId).removeClass("d-none");
+            }
         
+            function likeMysfit(mysfitId, callback) {
+              try {
+                var mysfitsApi = mysfitsApiEndpoint + '/mysfits/' + mysfitId + "/like";
+                //var mysfitsApi = 'http://localhost:8000/mysfits/' + mysfitId + "/like";
+                var reqData = {
+                  url : mysfitsApi,
+                  type : 'POST',
+                  success : function(response) {
+                    console.log("here" + mysfitId);
+                    callback(mysfitId);
+                  },
+                  error : function(response) {
+                    console.log("could not like mysfit");
+                    console.log(response);
+                    if (response.status == "401") {
+                      alert("You must be logged in to adopt a mysfit.");
+                    }
+                  }
+                }
+                
+                $.ajax(reqData);
+              } catch(err) {
+                console.log(err.message);
+              }
+            }
         
           </script>
         </html>
@@ -214,6 +264,7 @@ def getMysfits():
         serviceResponse = mysfitsTableClient.queryMysfits(queryParam)
     else:
         # no filter was found, retrieve all mysfits.
+        app.logger.info('retrieving all mysfits')
         serviceResponse = mysfitsTableClient.getAllMysfits()
 
     flaskResponse = Response(serviceResponse)
