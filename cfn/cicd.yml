@@ -10,21 +10,23 @@ Parameters:
     Type: String
   CoreServiceName:
     Type: String
+  CfnStackName:
+    Type: String
 
 Resources:
   MythicalLikeGitRepository:
     Type: AWS::CodeCommit::Repository
-    Properties: 
+    Properties:
       RepositoryDescription: Repository for the Mythical Mysfits like service
       RepositoryName: !Sub like-service-${AWS::StackName}
   MythicalCoreGitRepository:
     Type: AWS::CodeCommit::Repository
-    Properties: 
+    Properties:
       RepositoryDescription: Repository for the Mythical Mysfits core service
       RepositoryName: !Sub core-service-${AWS::StackName}
   MythicalInfraGitRepository:
     Type: AWS::CodeCommit::Repository
-    Properties: 
+    Properties:
       RepositoryDescription: Repository for the Mythical Mysfits infrastructure
       RepositoryName: !Sub Infra-${AWS::StackName}
 
@@ -133,14 +135,14 @@ Resources:
             - "ecr:GetDownloadUrlForLayer"
             - "ecr:BatchGetImage"
             Resource: "*"
-  
+
   # CodeBuild needs an S3 bucket to store artifacts in the interim.
   MythicalArtifactBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Delete 
-  
-  # Actual CodeBuild project that builds the Docker images and outputs imagedefinitions.json 
-  
+    DeletionPolicy: Delete
+
+  # Actual CodeBuild project that builds the Docker images and outputs imagedefinitions.json
+
   DockerBuildCodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -158,9 +160,9 @@ Resources:
         - Name: AWS_ACCOUNT_ID
           Value: !Ref AWS::AccountId
           Type: PLAINTEXT
-      Name: !Sub ${AWS::StackName}-like-service-build
+      Name: !Sub like-service-build-${AWS::StackName}
       ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
-  
+
   CoreBuildCodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -178,13 +180,13 @@ Resources:
         - Name: AWS_ACCOUNT_ID
           Value: !Ref AWS::AccountId
           Type: PLAINTEXT
-      Name: !Sub ${AWS::StackName}-core-service-build
+      Name: !Sub core-service-build-${AWS::StackName}
       ServiceRole: !Ref MythicalMysfitsServiceCodeBuildServiceRole
-  
+
   # CodePipeline for deployments. Uses CodeCommit + CodeBuild + ECS, deploying
-  # to an existing ECS service. It looks for imagedefinitions.json as well as 
+  # to an existing ECS service. It looks for imagedefinitions.json as well as
   # buildspec_prod for this
-  
+
   MythicalLikeServicePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -239,7 +241,7 @@ Resources:
                 ServiceName: !Ref LikeServiceName
                 FileName: imagedefinitions.json
               RunOrder: 1
-              
+
   MythicalCoreServicePipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -294,11 +296,52 @@ Resources:
                 ServiceName: !Ref CoreServiceName
                 FileName: imagedefinitions.json
               RunOrder: 1
-              
-  # CodePipeline does not automatically create this for you as part of 
-  # creation, but this role is for the CWE Hook to trigger CodePipeline once 
-  # there's an update in CodeCommit. Otherwise, we have to have CodePipeline  
-  # poll for changes, which is slower.            
+
+  MythicalInfraPipeline:
+    Type: 'AWS::CodePipeline::Pipeline'
+    Properties:
+      ArtifactStore:
+        Type: S3
+        Location: !Ref MythicalArtifactBucket
+      Name: !Sub InfraPipeline-${AWS::StackName}
+      RoleArn: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
+      Stages:
+        - Name: 'Source'
+          Actions:
+            - Name: 'Source'
+              ActionTypeId:
+                Category: 'Source'
+                Owner: 'AWS'
+                Version: '1'
+                Provider: 'CodeCommit'
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                PollForSourceChanges: 'false'
+                BranchName: master
+                RepositoryName: !GetAtt MythicalInfraGitRepository.Name
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
+                StackName: !Ref CfnStackName
+                TemplatePath: SourceArtifact::cfn/core.yml
+              RunOrder: 1
+
+  # CodePipeline does not automatically create this for you as part of
+  # creation, but this role is for the CWE Hook to trigger CodePipeline once
+  # there's an update in CodeCommit. Otherwise, we have to have CodePipeline
+  # poll for changes, which is slower.
   CodeCommitCloudWatchEventRole:
     Type: AWS::IAM::Role
     Properties:
@@ -321,11 +364,11 @@ Resources:
               -
                 Effect: Allow
                 Action: codepipeline:StartPipelineExecution
-                Resource: 
+                Resource:
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
   # Actual CWE Rule to push changes over to CodePipeline.
-                            
+
   CodeCommitCloudWatchEventRule:
     Type: AWS::Events::Rule
     Properties:
@@ -349,7 +392,7 @@ Resources:
           Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
           Id: codepipeline-LikePipeline
-          
+
   CoreServiceCodeCommitCloudWatchEventRule:
     Type: AWS::Events::Rule
     Properties:
