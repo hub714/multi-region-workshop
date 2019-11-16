@@ -80,7 +80,7 @@ Resources:
             - codebuild:*
             - iam:PassRole
             - cloudformation:DescribeStacks
-            - cloudformation:UodateStack
+            - cloudformation:UpdateStack
             Resource: "*"
             Effect: Allow
           Version: "2012-10-17"
@@ -402,6 +402,7 @@ Resources:
                 Resource:
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
+                  - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalInfraPipeline}
   # Actual CWE Rule to push changes over to CodePipeline.
 
   CodeCommitCloudWatchEventRule:
@@ -452,7 +453,7 @@ Resources:
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
           Id: codepipeline-CorePipeline
 
-  InraCommitCloudWatchEventRule:
+  InfraCommitCloudWatchEventRule:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
