@@ -10,11 +10,11 @@ Parameters:
 
   IsDrRegion:
     Type: String
-    Default: False
+    Default: false
     AllowedValues:
-      - True
-      - False
-    Description: Choose true if this stack is being deployed in the disaster recovery (DR) region
+      - true
+      - false
+    Description: Choose Yes if this stack is being deployed in the disaster recovery (DR) region
 
 Mappings:
   # Hard values for the subnet masks. These masks define
@@ -43,8 +43,8 @@ Mappings:
       CIDR: '10.0.3.0/24'
 
 Conditions:
-  NotDrRegion: !Equals [ !Ref IsDrRegion, False ]
-  IsInDrRegionTest: !Equals [ !Ref IsDrRegion, True ]
+  NotDrRegion: !Equals [ !Ref IsDrRegion, false ]
+  IsInDrRegionTest: !Equals [ !Ref IsDrRegion, true ]
 
 Resources:
   # VPC in which containers will be networked.
