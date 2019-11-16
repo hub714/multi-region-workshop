@@ -370,6 +370,7 @@ Resources:
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
                 StackName: !Ref CfnStackName
                 TemplatePath: SourceArtifact::core.yml
+                TemplateConfiguration: SourceArtifact::parameters_prod.json
                 RoleArn: !GetAtt InfraCfnServiceRole.Arn
               RunOrder: 1
 
