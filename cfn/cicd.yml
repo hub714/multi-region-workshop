@@ -368,7 +368,7 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
                 StackName: !Ref CfnStackName
-                TemplatePath: SourceArtifact::cfn/core.yml
+                TemplatePath: SourceArtifact::core.yml
                 RoleArn: !GetAtt InfraCfnServiceRole.Arn
               RunOrder: 1
 
