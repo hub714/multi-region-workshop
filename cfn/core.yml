@@ -587,7 +587,7 @@ Resources:
         MythicalEcsCluster: !Ref MythicalEcsCluster
         CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
         LikeServiceName: !Sub ${AWS::StackName}_Like-Service
-        CfnStackName: ${AWS::StackName}
+        CfnStackName: !Sub ${AWS::StackName}
 
   # MythicalCoreEcsService:
   #   Condition: IsInDrRegionTest
