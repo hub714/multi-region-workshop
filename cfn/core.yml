@@ -582,12 +582,12 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: NotDrRegion
     Properties:
-      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd.yml"
+      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd_dev.yml"
       Parameters:
         MythicalEcsCluster: !Ref MythicalEcsCluster
         CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
         LikeServiceName: !Sub ${AWS::StackName}_Like-Service
-        CfnStackName: !Ref ${AWS::StackName}
+        CfnStackName: ${AWS::StackName}
 
   # MythicalCoreEcsService:
   #   Condition: IsInDrRegionTest
