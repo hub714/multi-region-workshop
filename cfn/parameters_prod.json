@@ -1,4 +1,6 @@
 {
-  "IsDrRegion": "False",
-  "DDBTableName": "REPLACE_ME_DDB_TABLE_NAME"
+  "Parameters": {
+    "IsDrRegion": "False",
+    "DDBTableName": "REPLACE_ME_DDB_TABLE_NAME"
+  }
 }
