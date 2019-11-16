@@ -350,7 +350,7 @@ Resources:
                 - 'dynamodb:Query'
                 - 'dynamodb:UpdateItem'
                 - 'dynamodb:GetItem'
-              Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:${DDBTableName}'
+              Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBTableName}'
             #  Removing this for now to test with multi-region^
               # Resource: '*'
 
