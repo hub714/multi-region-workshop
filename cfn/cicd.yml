@@ -136,6 +136,38 @@ Resources:
             - "ecr:BatchGetImage"
             Resource: "*"
 
+  # An IAM role that allows the AWS CodeBuild service to perform the actions
+  # required to complete a build of our source code retrieved from CodeCommit,
+  # and push the created image to ECR.
+  InfraCfnServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      # RoleName: MythicalMysfitsServiceCodeBuildServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: "MythicalMysfitsService-InfraServicePolicy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          # - Effect: "Allow"
+          #   Action:
+          #   - "codecommit:ListBranches"
+          #   - "codecommit:ListRepositories"
+          #   - "codecommit:BatchGetRepositories"
+          #   - "codecommit:Get*"
+          #   - "codecommit:GitPull"
+          #   Resource:
+          #   - Fn::Sub: arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:MythicalMysfitsServiceRepository
+          - Effect: "Allow"
+            Action: "*"
+            Resource: "*"
+
   # CodeBuild needs an S3 bucket to store artifacts in the interim.
   MythicalArtifactBucket:
     Type: AWS::S3::Bucket
@@ -336,6 +368,7 @@ Resources:
                 Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
                 StackName: !Ref CfnStackName
                 TemplatePath: SourceArtifact::cfn/core.yml
+                RoleArn: !GetAtt InfraCfnServiceRole.Arn
               RunOrder: 1
 
   # CodePipeline does not automatically create this for you as part of
