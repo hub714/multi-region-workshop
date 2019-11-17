@@ -7,22 +7,18 @@ In this lab, you will start the process of aggregating metrics to understand the
 Our Cloudwatch dashboard should include metrics from the key components of our system and application. In this case, the metrics we should display on a dashboard are the following:
 
 * Fargate task capacity (CPU / Mem)
-* Number of active users using application (can't get this)
 * ALB requests per minute
-* ALB average latency per request (can't get this)
-* KPI that is TBD as custom metric from application - maybe grab this from CW Log Insights
+* Number of "Likes" to our Fargate service
 * X-Ray exposed metric to dashboard?
 
-Here's a reference diagram showing the metrics that we'll be putting onto a dashboard
-[TODO] ADD IN PRETTY DIAGRAM HERE
+Here's a reference image showing the metrics that we'll be putting onto a dashboard -
+![image](https://user-images.githubusercontent.com/23423809/69004118-aac5f880-08c2-11ea-9ace-ffd63a3aee25.png)
 
 Here's what you'll be doing:
 
-[TODO] CREATE TOC
 * Create Amazon Cloudwatch Dashboard
 * Add metrics to the dashboard
-* Save the dashboard and share with another team (TBD)
-
+* Save the dashboard
 
 
 
@@ -38,12 +34,12 @@ From the menu on the left hand side, select **Dashboards** and then create dashb
 * Note - Cloudwatch does not allow spaces in a dashboard name, so will fill in spaces with a hyphen!
 ![image](https://user-images.githubusercontent.com/23423809/68278028-5babd800-0025-11ea-9a96-b4fc213acdd8.png)
 
-You will be prompted to select a widget to add to your dashboard. Start off by selecting a line widget and click Configure. We will use this widget to map out our number of requests per minute passing through our Application Load Balancer.
+You will be prompted to select a widget to add to your dashboard. Start off by selecting a line widget and click Configure. We will use this widget to map out our number of requests per minute passing through our Application Load Balancer. This will be useful to show that there is actual traffic passing through the LB to the backend application.
 
 ![image](https://user-images.githubusercontent.com/23423809/68278128-931a8480-0025-11ea-8d88-721856aeb3dc.png)
 
 We will add our first metric - ALB Requests Per Minute - to the Cloudwatch dashboard.
-This is the *RequestCount* metric under the *ApplicationELB* Namespace. Select it by selectin **ApplicationELB -> Per AppELB, per AZ, per TG Metrics** and then selecting the tickbox next to **RequestCount**.
+This is the *RequestCount* metric under the *ApplicationELB* Namespace. Select it by selecting **ApplicationELB -> Per AppELB Metrics** and then selecting the tickbox next to **RequestCount**.
 
 ![image](https://user-images.githubusercontent.com/23423809/68278987-594a7d80-0027-11ea-8a43-acd4f8c073d2.png)
 
@@ -55,31 +51,31 @@ Give your widget a name by pressing the pencil next to *Untitled Graph*, inputti
 
 You have now created your first dashboard and added your first widget! Make sure to **Save your dashboard!!** by clicking the button *Save Dashboard*.
 
-3\. Repeat for next set of metrics...
+3\. Repeat the steps above to add additional widgets to your dashboard using the details below to determine which metric to use. These are just an example, of course you can use any other metrics that are meaningful to you.
 
-Hint - Mythical Service metrics
-Widget type - number
-Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Mythical Service)
-Widget Title - Like Service Metrics
+#### Mythical Service Metrics - CPU and Memory utilization of our Mythical Fargate Service
+- Widget type - number
+- Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Mythical Service)
+- Widget Title - Like Service Metrics
 
-Hint - Like Service metrics
-Widget type - number
-Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Like Service)
-Widget Title - Mythical Service Metrics
+#### Like Service Metrics - CPU and Memory utilization of our Like Fargate Service
+- Widget type - number
+- Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Like Service)
+- Widget Title - Mythical Service Metrics
 
-Hint - ALB HTTP Responses
-Widget type - Stacked Graph
-Metric location -> 
+#### ALB HTTP Responses - Graph showing the different HTTP responses from the backend servers
+- Widget type - Stacked Graph
+- Metric location -> ApplicationELB -> Per AppELB Metrics -> HTTPCode_Target_2XX_Count, HTTPCode_Target_4XX_Count, HTTPCode_Target_5XX_Count (ensure app/alb-<your_stack_name> shows as the LoadBalancer)
+- Statistic - Sum
+- Period - 1 Minute
 
+#### KPI From X-Ray here
+(this is still TBD obtaining the metric data from x-ray service)
 
-Add the remaining metrics to the dashboard using the following widget types for each metric:
-* number of active users within applcation - number widget
-* number of active users within applcation - line widget
-* add a text box to show the current live region
+#### Number of HTTP POSTS to Like Service
+(this is still TBD whether we want to put this in here)
 
-(Include remaining widgets)
-(Insert image of what target dashboard should look like, or similar to)
-
+### Remember to save your dashboard!!
 
 ### 2.2 HEADER
 
