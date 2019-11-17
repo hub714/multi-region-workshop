@@ -30,6 +30,7 @@ At the beginning of the workshop, you used AWS CloudFormation to create the infr
 
 1. Create the AWS CloudFormation stack in your secondary region
 
+
     aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
 
 In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
