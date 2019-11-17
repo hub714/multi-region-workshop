@@ -7,10 +7,10 @@ In this lab, you will start the process of aggregating metrics to understand the
 Our Cloudwatch dashboard should include metrics from the key components of our system and application. In this case, the metrics we should display on a dashboard are the following:
 
 * Fargate task capacity (CPU / Mem)
-* Number of active users using application
+* Number of active users using application (can't get this)
 * ALB requests per minute
-* ALB average latency per request
-* KPI that is TBD as custom metric from application
+* ALB average latency per request (can't get this)
+* KPI that is TBD as custom metric from application - maybe grab this from CW Log Insights
 * X-Ray exposed metric to dashboard?
 
 Here's a reference diagram showing the metrics that we'll be putting onto a dashboard
@@ -57,8 +57,20 @@ You have now created your first dashboard and added your first widget! Make sure
 
 3\. Repeat for next set of metrics...
 
+Hint - Mythical Service metrics
+Widget type - number
+Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Mythical Service)
+Widget Title - Like Service Metrics
 
-Save the dashboard!
+Hint - Like Service metrics
+Widget type - number
+Metric location - ECS -> ClusterName, ServiceName -> CPUUtilization and MemoryUtilization (make sure ServiceName is for Like Service)
+Widget Title - Mythical Service Metrics
+
+Hint - ALB HTTP Responses
+Widget type - Stacked Graph
+Metric location -> 
+
 
 Add the remaining metrics to the dashboard using the following widget types for each metric:
 * number of active users within applcation - number widget
