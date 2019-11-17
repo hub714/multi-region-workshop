@@ -29,9 +29,28 @@ Here's what you'll be doing:
 At the beginning of the workshop, you used AWS CloudFormation to create the infrastructure. We'll do the same thing now to replicate it, but we'll enter in a different parameter.
 
 1. Create the AWS CloudFormation stack in your secondary region
+First we will replicate the main infrastructure using a new CloudFormation stack:
 
+<pre>
+  aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
+</pre>
 
-    aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
+2. Update build scripts
+As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
+
+First, we will update the `mysfits-service` app. Navigate to the mysfits-service codecommit repo. You can do this in the side navigation pane or via CLI.
+
+Console:
+![Find file on nav pane](images/buildspec_prod)
+
+CLI:
+<pre>
+  $ cd ~/environment/**REPLACEME_CORE_REPO_NAME**
+</pre>
+
+Find the buildspec_prod file and update it to push to another region:
+- [TODO] Have a thing to hint on how
+
 
 In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
 
