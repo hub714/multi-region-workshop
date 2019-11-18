@@ -551,6 +551,9 @@ Resources:
       Protocol: HTTP
       VpcId: !Ref VPC
       TargetType: ip
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
 
   LikeServiceTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -564,6 +567,9 @@ Resources:
       Protocol: HTTP
       VpcId: !Ref VPC
       TargetType: ip
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
 
   MythicalLikeListenerRule:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
