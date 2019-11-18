@@ -9,8 +9,12 @@ from flask import Flask, jsonify, json, Response, request, abort
 from flask_cors import CORS
 import mysfitsTableClient
 
-# [TODO] load x-ray recorder module
-# [TODO] load middleware module for incoming requests
+# Load functions/classes from aws xray sdk to instrument this service to trace incoming 
+# http requests and downstream aws sdk calls. This includes the X-Ray Flask middleware
+# [TODO] load x-ray recorder class
+# [TODO] load x-ray patch function
+# [TODO] load middleware function for flask
+
 
 if 'LOGLEVEL' in os.environ:
     loglevel = os.environ['LOGLEVEL'].upper()
@@ -19,12 +23,22 @@ else:
 
 logging.basicConfig(level=loglevel)
 
+# Configure xray_recorder class to name your service and load the ECS plugin for 
+# additional metadata.
+# [TODO] configure the x-ray recorder with a service name and load the ecs plugin
+
+
+# Configure X-Ray to trace service client calls to downstream AWS services
+# [TODO] patch the boto3 library
+
+
 app = Flask(__name__)
 CORS(app)
 app.logger
 
-# [TODO] x-ray recorder config to label segments as 'like service'
-# [TODO] initialize the x-ray middleware
+# Instantiate the Flask middleware
+# [TODO] configure middleware with the flask app and x-ray recorder
+
 
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
@@ -37,10 +51,10 @@ def like_mysfit(mysfit_id):
     app.logger.info('Like received.')
     if os.environ['CHAOSMODE'] == "on":
         n = random.randint(1,100)
-        if n < 65:
+        if n < 30:
             app.logger.warn('WARN: simulated 500 activated')
             abort(500)
-        elif n < 90:
+        elif n < 60:
             app.logger.warn('WARN: simulated 404 activated')
             abort(404)
         app.logger.warn('WARN: This thing should NOT be left on..')
