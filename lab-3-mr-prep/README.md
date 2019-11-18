@@ -45,7 +45,7 @@ Console:
 
 CLI:
 <pre>
-  $ cd ~/environment/**REPLACEME_CORE_REPO_NAME**
+  $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>
 </pre>
 
 Find the buildspec_prod file and update it to push to another region:
