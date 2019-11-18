@@ -32,8 +32,13 @@ At the beginning of the workshop, you used AWS CloudFormation to create the infr
 First we will replicate the main infrastructure using a new CloudFormation stack:
 
 <pre>
-  aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
+$ aws cloudformation deploy --stack-name second-region --template-file cfn/core.yml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --region us-east-1
 </pre>
+
+Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the values of:
+* LikeServiceEcrRepo
+* MythicalServiceEcrRepo
+* XrayEcrRepo
 
 2. Update build scripts
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
