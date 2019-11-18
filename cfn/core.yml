@@ -53,6 +53,7 @@ Resources:
   # for the region, for high availability.
   VPC:
     Type: AWS::EC2::VPC
+    DependsOn: MythicalCiCdStack
     Properties:
       EnableDnsSupport: true
       EnableDnsHostnames: true
