@@ -38,7 +38,6 @@ $ aws cloudformation deploy --stack-name second-region --template-file cfn/core.
 Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the values of:
 * LikeServiceEcrRepo
 * MythicalServiceEcrRepo
-* XrayEcrRepo
 
 2. Update build scripts
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
@@ -53,8 +52,42 @@ CLI:
   $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>
 </pre>
 
-Find the buildspec_prod file and update it to push to another region:
+Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions:
+
 - [TODO] Have a thing to hint on how
+
+For a completed buildspec, see the app/hints folder.
+
+3. Replicate the Database
+
+So now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
+
+There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
+
+**Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
+
+In your source region (double check this) DynamoDB, select the table. It will be named 'Table-' followed by your chosen stack name.
+
+![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
+
+Next, choose the Global Tables tab from the top and go ahead and create your Global Table and choose your second region - just accept any messages to enable anything it needs and to create any roles it may need as well.
+
+![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-config.png)
+
+Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
+
+4. Automate deployments into secondary region
+
+Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
+
+Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. 
+
+### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
+
+# Checkpoint
+
+Proceed to [Lab 4](../lab-4-globalacc)!
+
 
 
 In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
@@ -79,27 +112,3 @@ These are the things that we will need to replicate and also automate:
 ### Replicate The app to a second region
 
     aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
-
-### 3.2 Replicate the Database
-
-So now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
-
-There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
-
-**Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
-
-In your source region (double check this) DynamoDB, select the table. It will be named 'Table-' followed by your chosen stack name.
-
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
-
-Next, choose the Global Tables tab from the top and go ahead and create your Global Table and choose your second region - just accept any messages to enable anything it needs and to create any roles it may need as well.
-
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-config.png)
-
-Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
-
-### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
-
-# Checkpoint
-
-Proceed to [Lab 4](../lab-4-globalacc)!
