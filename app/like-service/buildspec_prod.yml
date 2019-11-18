@@ -5,8 +5,7 @@ phases:
     commands:
       - echo Assigning variables for repositories and regions
       - PRIMARY_LIKE_REPO_URI=REPLACEME_REPO_URI
-      - PRIMARY_XRAY_REPO_URI=REPLACEME_XRAY_URI
-      # - SECONDARY_REPOSITORY_URI=REPLACEME_SECONDARY_REPO_URI
+      # - SECONDARY_LIKE_REPO_URI=REPLACEME_SECONDARY_REPO_URI
       - PRIMARY_REGION=$AWS_DEFAULT_REGION
       # [Todo]: Change the name of your secondary region based on the region you selected as a secondary region
       # - SECONDARY_REGION=REPLACEME_SECONDARY_REGION
@@ -14,32 +13,29 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the like-service Docker image...
-      - docker build -t core-service:$CODEBUILD_RESOLVED_SOURCE_VERSION . # Here, we are using the environment variable passed in via CodeBuild IMAGE_REPO_NAME
-      - echo Building the x-ray Docker image...
-      - docker build -t x-ray-daemon app/xray
-      - echo Tagging Images
-      - docker tag core-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - docker tag x-ray-daemon:latest $XRAY_ECR_REPO:latest
+      - docker build -t like-service:$CODEBUILD_RESOLVED_SOURCE_VERSION . # Here, we are using the environment variable passed in via CodeBuild IMAGE_REPO_NAME
+      - echo Tagging Image for primary region
+      - docker tag like-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
       # Tag the image for the secondary region
-      # - docker tag core-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $SECONDARY_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      # - docker tag core-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $SECONDARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing Images up to ECR for primary region - $PRIMARY_REGION
-      - echo Logging into ECR in $PRIMARY_REGION
+      - echo Logging into ECR
       - $(aws ecr get-login --no-include-email --region $PRIMARY_REGION)
-      - echo Pushing the Docker imageto the $PRIMARY_REGION region
+      - echo Pushing the Docker image to ECR
       - docker push $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - docker push $PRIMARY_XRAY_REPO_URI:latest
-      - printf '[{"name":"like-service","imageUri":"%s"}, {"name":"x-ray-daemon","imageUri":"%s"}]' $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION $PRIMARY_XRAY_REPO_URI:latest > imagedefinitions_primary.json
+      - echo Printing the container name (in taskdef) and passing it a new Docker image.
+      - printf '[{"name":"like-service","imageUri":"%s"}]' $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions_primary.json
       # Starting with Secondary Region actions
       # - echo Pushing Images up to ECR for secondary region - $SECONDARY_REGION
-      # - echo Logging into ECR in $SECONDARY_REGION
+      # - echo Logging into ECR
       # - $(aws ecr get-login --no-include-email --region $SECONDARY_REGION)
-      # - echo Pushing the Docker imageto the $SECONDARY_REGION region
-      # - docker push $SECONDARY_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      # Printing the container name (in taskdef) and passing it a new Docker image.
-      - printf '[{"name":"like-service","imageUri":"%s"}, {"name":"x-ray-daemon","imageUri":"%s"}]' $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION $SECONDARY_XRAY_REPO_URI:latest > imagedefinitions_secondary.json
+      # - echo Pushing the Docker image
+      # - docker push $SECONDARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      # - echo Printing the container name (in taskdef) and passing it a new Docker image.
+      # - printf '[{"name":"like-service","imageUri":"%s"}]' $SECONDARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions_secondary.json
 artifacts:
     files:
       - imagedefinitions_primary.json
