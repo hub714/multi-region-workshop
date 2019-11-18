@@ -665,6 +665,7 @@ Resources:
               logger.debug('Context: {}'.format(context))
               responseData = {}
 
+
               # Immediately respond on Delete
               if event['RequestType'] == 'Delete':
                   try:
@@ -692,7 +693,7 @@ Resources:
                       if ecsServicesToDelete['serviceArns'] != []:
                           for serviceName in ecsServicesToDelete['serviceArns']:
                               ecsDeleteResponse = ecsClient.delete_service(
-                                  cluster='Cluster-mr-test',
+                                  cluster=EcsClusterName,
                                   service=serviceName,
                                   force=True)
 
