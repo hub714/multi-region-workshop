@@ -48,6 +48,13 @@ Now that you have created the Singapore Global Table, you can test to see if it 
 
 ### 3.3 Global Accelerator <--this should probably be its own lab4 maybe. 
 
+### Enabling Cloudwatch Dashboard to show multi-region metrics
+
+Owen stuff in here
+
+### End Enabling Cloudwatch Dashboard to show multi-region metrics
+
+
 # Checkpoint 
 
 Proceed to [Lab 4](../lab-4-globalacc)!
