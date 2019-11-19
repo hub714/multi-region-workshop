@@ -8,12 +8,12 @@ git config --global credential.UseHttpPath true
 
 LIKE_REPO=$(jq < cfn-output.json -r '.MythicalLikeGitRepositoryCloneUrl')
 CORE_REPO=$(jq < cfn-output.json -r '.MythicalCoreGitRepositoryCloneUrl')
-INFRA_REPO=$(jq < cfn-output.json -r '.MythicalInfraGitRepositoryCloneUrl')
-LIKE_REPO_NAME==$(jq < cfn-output.json -r '.MythicalLikeGitRepositoryName')
+# INFRA_REPO=$(jq < cfn-output.json -r '.MythicalInfraGitRepositoryCloneUrl')
+# LIKE_REPO_NAME==$(jq < cfn-output.json -r '.MythicalLikeGitRepositoryName')
 # CORE_REPO_NAME==$(jq < cfn-output.json -r '.MythicalCoreGitRepositoryName')
 
 cd ~/environment/
 
 git clone $LIKE_REPO
 git clone $CORE_REPO
-git clone $INFRA_REPO
+# git clone $INFRA_REPO

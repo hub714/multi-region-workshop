@@ -39,8 +39,9 @@ $ aws cloudformation deploy --stack-name mm-secondary-region --template-file cfn
 Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the values of:
 * SecondaryLikeServiceEcrRepo
 * SecondaryMythicalServiceEcrRepo
+* SecondaryLoadBalancerDNS
 
-### 3\. Replicate the Database
+### Database Replication
 
 The most difficult part of a multi-region application is typically data synchronization. Now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
 
@@ -60,7 +61,7 @@ Next, choose the Global Tables tab from the top and go ahead and create your Glo
 
 Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
 
-### 4\. Automate deployments into secondary region
+### 4\. Deployment Replication
 
 Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
 
@@ -96,9 +97,11 @@ Image definitions file: **imagedefinitions_secondary.json** - The value of this 
 
 ![Create Action](images/03-cp-createactiongroup.png)
 
-Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline.
+Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline. At this point, you should see your pipeline again and the final stage will be grey because it has not run yet.
 
-### Automate Cross Region Deployments
+**Do this again for the Like Service**
+
+### Trigger deployment
 
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
 
@@ -124,15 +127,28 @@ We have created some completed buildspec files if you want to skip this portion.
   $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
 
 Open the two files and update these variables:
-* REPLACEME_SECONDARY_REGION in both buildspecs
-* SECONDARY_CORE_REPO_URI in the Core service buildspec
-* SECONDARY_LIKE_REPO_URI in the Like service buildspec
+* REPLACEME_SECONDARY_REGION in both buildspec_prod.yml files
+* SECONDARY_CORE_REPO_URI in the Core service buildspec_prod.yml
+* SECONDARY_LIKE_REPO_URI in the Like service buildspec_prod.yml
 </pre>
 </details>
 
-### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
+Finally, add all the files to both repos and trigger deployments:
+
+<pre>
+  $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/
+  $ git add -A
+  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git push origin master
+  $ cd ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/
+  $ git add -A
+  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git push origin master
+</pre>
 
 # Checkpoint
+
+At this time, your application should be running in both regions. Hit the secondary **SecondaryLoadBalancerDNS** that you copied earlier. You should see the exact same site you had before.
 
 Proceed to [Lab 4](../lab-4-globalacc)!
 

@@ -866,7 +866,11 @@ Outputs:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
   LoadBalancerDNS:
     Description: The DNS for the load balancer
-    Value: !GetAtt MythicalLoadBalancer.DNSName
+    Value: !Sub http://${MythicalLoadBalancer.DNSName}
+  SecondaryLoadBalancerDNS:
+    Condition: IsInDrRegionTest
+    Description: The DNS for the load balancer
+    Value: !Sub http://${MythicalLoadBalancer.DNSName}
   DynamoTable:
     Condition: NotDrRegion
     Value: !Ref DDBTableName
