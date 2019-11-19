@@ -28,8 +28,7 @@ Here's what you'll be doing:
 ### Infrastructure Replication
 At the beginning of the workshop, you used AWS CloudFormation to create the infrastructure. We'll do the same thing now to replicate it, but we'll enter in a different parameter.
 
-1\. Create the AWS CloudFormation stack in your secondary region
-First we will replicate the main infrastructure using a new CloudFormation stack:
+First we will replicate the main infrastructure using a new CloudFormation stack. Note that there are a bunch of different ways to do this, like updating a CodePipeline pipeline to deploy to another region or using stacksets. We just make it a bit simpler by running this manually.
 
 <pre>
 $ cd ~/environment/multi-region-workshop
@@ -61,14 +60,13 @@ Next, choose the Global Tables tab from the top and go ahead and create your Glo
 
 Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
 
-### 4\. Deployment Replication
+### Deployment Replication
 
 Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
 
 Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. Note that if your pipelines are not in a **Succeeded** state, there was a problem. Try to get your deployments into a **Succeeded** state before proceeding. You may have to re-run some setup scripts.
 
 ![Select Core Pipeline](images/03-codepipeline-core.png)
-[TODO]: Circle Add Stage the pipeline
 
 Click on **Edit** and **Add stage** after the Deploy stage.
 
@@ -123,10 +121,18 @@ We have created some completed buildspec files if you want to skip this portion.
   $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/buildspec_prod.yml
   $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
 
+
 Open the two files and update these variables:
 * REPLACEME_SECONDARY_REGION in both buildspec_prod.yml files
 * SECONDARY_CORE_REPO_URI in the Core service buildspec_prod.yml
 * SECONDARY_LIKE_REPO_URI in the Like service buildspec_prod.yml
+</pre>
+</details>
+
+<details>
+<sumamry> Click here for a script that will do it for you</summary>
+<pre>
+[TODO] Haven't done this yet. Would have to get the region and then get the stack and then the outpots
 </pre>
 </details>
 
