@@ -33,12 +33,12 @@ First we will replicate the main infrastructure using a new CloudFormation stack
 
 <pre>
 $ cd ~/environment/multi-region-workshop
-$ aws cloudformation deploy --stack-name second-region --template-file cfn/core.yml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --region us-east-1
+$ aws cloudformation deploy --stack-name mm-secondary-region --template-file cfn/core.yml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides IsDrRegion=true --region us-east-1
 </pre>
 
 Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the values of:
-* LikeServiceEcrRepo
-* MythicalServiceEcrRepo
+* SecondaryLikeServiceEcrRepo
+* SecondaryMythicalServiceEcrRepo
 
 2\. Update build scripts
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
@@ -93,7 +93,29 @@ Now that you have created the Singapore Global Table, you can test to see if it 
 
 Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
 
-Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*.
+Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. Note that if your pipelines are not in a **Succeeded** state, there was a problem. Try to get your deployments into a **Succeeded** state before proceeding. You may have to re-run some setup scripts.
+
+![Select Core Pipeline](images/03-codepipeline-core.png)
+[TODO]: Circle Add Stage the pipeline
+
+Click on **Edit** and **Add stage** after the Deploy stage.
+
+![Edit Core {Pipeline}](images/03-codepipeline-edit.png)
+[TODO]: Circle Add Stage
+
+Type in **CrossRegionDeploy** for the stage name.
+![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
+
+Click on **Add Action Group** and enter the following details:
+Action name: **CrossRegionDeploy**
+Action provider: **Amazon ECS**
+Region: **Choose the secondary region you deployed into. By default, this should be US East - (N. Virginia)**
+Input artifacts: **BuildArtifact**
+Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+Service name:
+
+
+
 
 ### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
 

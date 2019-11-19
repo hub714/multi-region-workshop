@@ -455,7 +455,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: service
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}:latest
+          Image: docker.io/nginx:latest
           PortMappings:
             - ContainerPort: 8080
               Protocol: http
@@ -485,7 +485,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: like-service
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}:latest
+          Image: docker.io/nginx:latest
           PortMappings:
             - ContainerPort: 8080
               Protocol: http
@@ -503,6 +503,50 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+
+  CoreEcsService:
+    Condition: IsInDrRegionTest
+    DependsOn: MythicalListener
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref MythicalServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref FargateContainerSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
+
+  LikeEcsService:
+    Condition: IsInDrRegionTest
+    DependsOn: MythicalListener
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref LikeServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: like-service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref FargateContainerSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
 
   MythicalLoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -588,33 +632,13 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: NotDrRegion
     Properties:
-      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd.yml"
+      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd_dev.yml"
       Parameters:
         MythicalEcsCluster: !Ref MythicalEcsCluster
         CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
         LikeServiceName: !Sub ${AWS::StackName}_Like-Service
         CfnStackName: !Sub ${AWS::StackName}
 
-  # MythicalCoreEcsService:
-  #   Condition: IsInDrRegionTest
-  #   Type: AWS::ECS::Service
-  #   Properties:
-  #     TaskDefinition: !Ref MythicalServiceTaskDefinition
-  #     DesiredCount: 1
-  #     LaunchType: FARGATE
-  #     LoadBalancers:
-  #     - TargetGroupArn: !Ref MythicalServiceTargetGroup
-  #       ContainerPort: 8080
-  #       ContainerName: service
-  #     Cluster: !Ref MythicalEcsCluster
-  #     NetworkConfiguration:
-  #       AwsvpcConfiguration:
-  #         AssignPublicIp: DISABLED
-  #         SecurityGroups:
-  #           - !Ref FargateContainerSecurityGroup
-  #         Subnets:
-  #           - !Ref PrivateSubnetOne
-  #           - !Ref PrivateSubnetTwo
 
 
   # Working on a function to delete all extra stuff - disregard for now
