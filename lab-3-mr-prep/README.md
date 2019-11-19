@@ -40,7 +40,66 @@ Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the
 * SecondaryLikeServiceEcrRepo
 * SecondaryMythicalServiceEcrRepo
 
-2\. Update build scripts
+### 3\. Replicate the Database
+
+The most difficult part of a multi-region application is typically data synchronization. Now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
+
+There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
+
+# It's totally possible that this will not be necessary.
+
+**Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
+
+In your source region (double check this) DynamoDB, select the table. It will be named 'Table-' followed by your chosen stack name.
+
+![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
+
+Next, choose the Global Tables tab from the top and go ahead and create your Global Table and choose your second region - just accept any messages to enable anything it needs and to create any roles it may need as well.
+
+![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-config.png)
+
+Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
+
+### 4\. Automate deployments into secondary region
+
+Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
+
+Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. Note that if your pipelines are not in a **Succeeded** state, there was a problem. Try to get your deployments into a **Succeeded** state before proceeding. You may have to re-run some setup scripts.
+
+![Select Core Pipeline](images/03-codepipeline-core.png)
+[TODO]: Circle Add Stage the pipeline
+
+Click on **Edit** and **Add stage** after the Deploy stage.
+
+![Edit Core {Pipeline}](images/03-codepipeline-edit.png)
+[TODO]: Circle Add Stage
+
+Type in **CrossRegionDeploy** for the stage name.
+![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
+[todo:]update image so it doesn't have errors
+
+Click on **Add Action Group** and enter the following details:
+
+Action name: **CrossRegionDeploy**
+
+Action provider: **Amazon ECS**
+
+Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+
+Input artifacts: **BuildArtifact**
+
+Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+
+Service name: **Select the service that includes "Core"**
+
+Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
+
+![Create Action](images/03-cp-createactiongroup.png)
+
+Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline.
+
+### Automate Cross Region Deployments
+
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
 
 First, we will update the `core-service` app. Navigate to the core-service codecommit repo. You can do this in the side navigation pane or via CLI.
@@ -70,65 +129,6 @@ Open the two files and update these variables:
 * SECONDARY_LIKE_REPO_URI in the Like service buildspec
 </pre>
 </details>
-
-3\. Replicate the Database
-
-The most difficult part of a multi-region application is typically data synchronization. Now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
-
-There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
-
-# It's totally possible that this will not be necessary.
-
-**Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
-
-In your source region (double check this) DynamoDB, select the table. It will be named 'Table-' followed by your chosen stack name.
-
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
-
-Next, choose the Global Tables tab from the top and go ahead and create your Global Table and choose your second region - just accept any messages to enable anything it needs and to create any roles it may need as well.
-
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-config.png)
-
-Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
-
-4. Automate deployments into secondary region
-
-Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
-
-Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. Note that if your pipelines are not in a **Succeeded** state, there was a problem. Try to get your deployments into a **Succeeded** state before proceeding. You may have to re-run some setup scripts.
-
-![Select Core Pipeline](images/03-codepipeline-core.png)
-[TODO]: Circle Add Stage the pipeline
-
-Click on **Edit** and **Add stage** after the Deploy stage.
-
-![Edit Core {Pipeline}](images/03-codepipeline-edit.png)
-[TODO]: Circle Add Stage
-
-Type in **CrossRegionDeploy** for the stage name.
-![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
-
-Click on **Add Action Group** and enter the following details:
-
-Action name: **CrossRegionDeploy**
-
-Action provider: **Amazon ECS**
-
-Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
-
-Input artifacts: **BuildArtifact**
-
-Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
-
-Service name: **Select the service that includes "Core"**
-
-Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
-
-![Create Action](images/03-cp-createactiongroup.png)
-
-Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline.
-
-
 
 ### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
 
