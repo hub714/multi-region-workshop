@@ -109,12 +109,19 @@ Type in **CrossRegionDeploy** for the stage name.
 ![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
 
 Click on **Add Action Group** and enter the following details:
+
 Action name: **CrossRegionDeploy**
+
 Action provider: **Amazon ECS**
+
 Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+
 Input artifacts: **BuildArtifact**
+
 Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+
 Service name: **Select the service that includes "Core"**
+
 Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
 
 ![Create Action](images/03-cp-createactiongroup.png)
