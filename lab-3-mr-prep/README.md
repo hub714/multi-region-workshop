@@ -28,10 +28,11 @@ Here's what you'll be doing:
 ### Infrastructure Replication
 At the beginning of the workshop, you used AWS CloudFormation to create the infrastructure. We'll do the same thing now to replicate it, but we'll enter in a different parameter.
 
-1. Create the AWS CloudFormation stack in your secondary region
+1\. Create the AWS CloudFormation stack in your secondary region
 First we will replicate the main infrastructure using a new CloudFormation stack:
 
 <pre>
+$ cd ~/environment/multi-region-workshop
 $ aws cloudformation deploy --stack-name second-region --template-file cfn/core.yml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --region us-east-1
 </pre>
 
@@ -39,30 +40,42 @@ Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the
 * LikeServiceEcrRepo
 * MythicalServiceEcrRepo
 
-2. Update build scripts
+2\. Update build scripts
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
 
-First, we will update the `mysfits-service` app. Navigate to the mysfits-service codecommit repo. You can do this in the side navigation pane or via CLI.
+First, we will update the `core-service` app. Navigate to the core-service codecommit repo. You can do this in the side navigation pane or via CLI.
 
 Console:
-![Find file on nav pane](images/buildspec_prod)
+![Find file on nav pane](images/03-core-service_buildspec.png)
 
 CLI:
 <pre>
-  $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>
+  $ cd ~/environment/<b>REPLACEME_SECONDARY_CORE_REPO_NAME</b>
 </pre>
 
-Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions:
+Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions. Within both of the buildspecs there are [TODO] lines to guide you through what you'll need to do. It's your choice if you want to understand how the build process works. Otherwise...
 
-- [TODO] Have a thing to hint on how
+<details>
+<summary>Click here for a completed buildspec and commands to copy them in:</summary>
+We have created some completed buildspec files if you want to skip this portion. They are in the app/hints folder.
+<pre>
+  $ cp ~/environment/multi-region/workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_SECONDARY_CORE_REPO_NAME</b>/buildspec_prod.yml
+  $ cp ~/environment/multi-region/workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_SECONDARY_LIKE_REPO_NAME</b>/buildspec_prod.yml
 
-For a completed buildspec, see the app/hints folder.
+Open the two files and update these variables:
+* REPLACEME_SECONDARY_REGION in both buildspecs
+* SECONDARY_CORE_REPO_URI in the Core service buildspec
+* SECONDARY_LIKE_REPO_URI in the Like service buildspec
+</pre>
+</details>
 
-3. Replicate the Database
+3\. Replicate the Database
 
-So now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
+The most difficult part of a multi-region application is typically data synchronization. Now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
 
 There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
+
+# It's totally possible that this will not be necessary.
 
 **Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
 
@@ -80,7 +93,7 @@ Now that you have created the Singapore Global Table, you can test to see if it 
 
 Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
 
-Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. 
+Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*.
 
 ### 3.3 Global Accelerator <--this should probably be its own lab4 maybe.
 
