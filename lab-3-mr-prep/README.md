@@ -73,27 +73,22 @@ Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipelin
 Click on **Edit** and **Add stage** after the Deploy stage.
 
 ![Edit Core {Pipeline}](images/03-codepipeline-edit.png)
-[TODO]: Circle Add Stage
 
 Type in **CrossRegionDeploy** for the stage name.
+
 ![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
-[todo:]update image so it doesn't have errors
 
-Click on **Add Action Group** and enter the following details:
+Next we will configure the stage so that it deploys to ECS in the secondary region. Click on **Edit Stage** and then **Add Action**. Enter in the following details in the **Edit Action** popup:
 
-Action name: **CrossRegionDeploy**
-
-Action provider: **Amazon ECS**
-
-Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
-
-Input artifacts: **BuildArtifact**
-
-Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
-
-Service name: **Select the service that includes "Core"**
-
-Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
+**Edit Action**:
+* Click on **Add Action Group** and enter the following details:
+* Action name: **CrossRegionDeploy**
+* Action provider: **Amazon ECS**
+* Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+* Input artifacts: **BuildArtifact**
+* Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+* Service name: **Select the service that includes "Core"**
+* Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
 
 ![Create Action](images/03-cp-createactiongroup.png)
 
@@ -101,7 +96,9 @@ Click **Done** and then **Save** at the top of the screen. Click through prompts
 
 **Do this again for the Like Service**
 
-### Trigger deployment
+![Do it again](images/03-codepipeline-like.png)
+
+### Update build scripts to upload docker images to both regions
 
 As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
 
@@ -132,6 +129,8 @@ Open the two files and update these variables:
 * SECONDARY_LIKE_REPO_URI in the Like service buildspec_prod.yml
 </pre>
 </details>
+
+### Trigger deployment again
 
 Finally, add all the files to both repos and trigger deployments:
 
