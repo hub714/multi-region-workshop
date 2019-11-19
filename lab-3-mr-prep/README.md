@@ -150,8 +150,8 @@ Finally, add all the files to both repos and trigger deployments:
 At this time, your application should be running in both regions. Hit the secondary **SecondaryLoadBalancerDNS** that you copied earlier. You should see the exact same site you had before.
 
 Proceed to [Lab 4](../lab-4-globalacc)!
-
-
+<!--
+# disregard
 
 In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
 
@@ -174,4 +174,4 @@ These are the things that we will need to replicate and also automate:
 
 ### Replicate The app to a second region
 
-    aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
+    aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2 -->
