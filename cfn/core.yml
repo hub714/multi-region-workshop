@@ -874,10 +874,22 @@ Outputs:
     Condition: NotDrRegion
     Value: !Ref MythicalProfile
   MythicalServiceEcrRepo:
+    Condition: NotDrRegion
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
   LikeServiceEcrRepo:
+    Condition: NotDrRegion
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
+  SecondaryMythicalServiceEcrRepo:
+    Condition: IsInDrRegionTest
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
+  SecondaryLikeServiceEcrRepo:
+    Condition: IsInDrRegionTest
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
   XrayEcrRepo:
+    Condition: NotDrRegion
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
+  SecondaryXrayEcrRepo:
+    Condition: IsInDrRegionTest
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup

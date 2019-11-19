@@ -55,12 +55,14 @@ CLI:
 
 Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions. Within both of the buildspecs there are [TODO] lines to guide you through what you'll need to do. It's your choice if you want to understand how the build process works. Otherwise...
 
+[TODO:] mod bootstrap to change these buildspecs
+
 <details>
 <summary>Click here for a completed buildspec and commands to copy them in:</summary>
 We have created some completed buildspec files if you want to skip this portion. They are in the app/hints folder.
 <pre>
-  $ cp ~/environment/multi-region/workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_SECONDARY_CORE_REPO_NAME</b>/buildspec_prod.yml
-  $ cp ~/environment/multi-region/workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_SECONDARY_LIKE_REPO_NAME</b>/buildspec_prod.yml
+  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/buildspec_prod.yml
+  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
 
 Open the two files and update these variables:
 * REPLACEME_SECONDARY_REGION in both buildspecs
@@ -109,11 +111,15 @@ Type in **CrossRegionDeploy** for the stage name.
 Click on **Add Action Group** and enter the following details:
 Action name: **CrossRegionDeploy**
 Action provider: **Amazon ECS**
-Region: **Choose the secondary region you deployed into. By default, this should be US East - (N. Virginia)**
+Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
 Input artifacts: **BuildArtifact**
 Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
-Service name:
+Service name: **Select the service that includes "Core"**
+Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
 
+![Create Action](images/03-cp-createactiongroup.png)
+
+Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline.
 
 
 
