@@ -33,34 +33,34 @@ Further reading:
 
 #### a. Edit the Like service task definition to include the X-Ray daemon container
 
-<details>
-<summary>Learn more: Need a refresher on ECS task definitions?</summary>
+    <details>
+    <summary>Learn more: Need a refresher on ECS task definitions?</summary>
 
-A task definition is a JSON template that instructs ECS how to launch your container(s). In it you can specify task and container resource requirements, expose listening ports, run one or more container images, and more. If you're familiar with Docker run arguments, they are similar.
+    A task definition is a JSON template that instructs ECS how to launch your container(s). In it you can specify task and container resource requirements, expose listening ports, run one or more container images, and more. If you're familiar with Docker run arguments, they are similar.
 
-Further reading: [ECS Documentation: Task Definitions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
-</details>
+    Further reading: [ECS Documentation: Task Definitions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
+    </details>
 
-Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
+    Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
 
-Find the Like microservice task definition in the list; the name will start with `Multi-Region-Like-Service-` followed by the CloudFormation stack name you set.  
+    Find the Like microservice task definition in the list; the name will start with `Multi-Region-Like-Service-` followed by the CloudFormation stack name you set.  
 
-Select the checkbox next to the task definition, and click **Create new revision**.
+    Select the checkbox next to the task definition, and click **Create new revision**.
 
-Scroll down to "Container Definitions" and click **Add container**.
+    Scroll down to "Container Definitions" and click **Add container**.
 
-Complete the following fields:
+    Complete the following fields:
 
-- **Container name** - enter `xray-daemon`
-- **Image** - enter `amazon/aws-xray-daemon`
-- **Port mappings** - enter `2000` for container port, and select `udp` for protocol
+    - **Container name** - enter `xray-daemon`
+    - **Image** - enter `amazon/aws-xray-daemon`
+    - **Port mappings** - enter `2000` for container port, and select `udp` for protocol
 
-Your configuration will look similar to this:
-![X-Ray sidecar](./images/03-xraySidecar.png) TODO ADD NEW SCREENSHOT
+    Your configuration will look similar to this:
+    ![X-Ray sidecar](./images/03-xraySidecar.png) TODO ADD NEW SCREENSHOT
 
-Click **Add**
+    Click **Add**
 
-Click **Create**
+    Click **Create**
 
 #### b. Update the Like service ECS service to reference the new task definition
 
