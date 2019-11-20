@@ -79,6 +79,6 @@ You have now created your first dashboard and added your first widget! Make sure
 
 ### 2.2 HEADER
 
-# Checkpoint 
+# Checkpoint
 
-Proceed to [Lab 3](../lab-3-mr)!
+Proceed to [Lab 3](../lab-3-mr-prep)!
