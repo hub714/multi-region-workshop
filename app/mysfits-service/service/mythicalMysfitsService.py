@@ -5,8 +5,11 @@ import requests
 import json
 import os
 import logging
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch
+from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 
-# A very basic API created using Flask that has two possible routes for requests.
+# logging
 if 'LOGLEVEL' in os.environ:
     loglevel = os.environ['LOGLEVEL'].upper()
 else:
@@ -14,15 +17,30 @@ else:
 
 logging.basicConfig(level=loglevel)
 
+plugins = ('ecs_plugin',)
+xray_recorder.configure(
+  service = 'Mysfits Service',
+  plugins = plugins,
+  #daemon_address='172.17.0.2:2000', # for local testing
+  context_missing='LOG_ERROR'
+)
+
+libraries = ('boto3',)
+patch(libraries)
+
 app = Flask(__name__)
 CORS(app)
 app.logger
+
+XRayMiddleware(app, xray_recorder)
 
 if (os.environ['AWS_REGION'] != ''):
     region = os.environ['AWS_REGION']
 else:
     r = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
     region = r.json()['region']
+
+# A very basic API created using Flask that has two possible routes for requests.
 
 # The service basepath has a short response just to ensure that healthchecks
 # sent to the service root will receive a healthy response.
