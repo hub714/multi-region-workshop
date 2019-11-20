@@ -122,7 +122,7 @@ Add (3) lines of code to:
 
 Note: There are a couple approaches to patching client libraries using either the `patch_all` or `patch` modules. We choose the latter for specificity, but feel free to use the easy button that is the former.
 
-Here are links to documentation to help you figure it out:
+Here is some documentation to help you figure it out:
 
 * [X-Ray Python Middleware](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-middleware.html)
 * [Patching libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
@@ -164,7 +164,7 @@ Configure (3) attributes in the xray_recorder class to:
 2. Enable the ECS service plugin for additional metadata to be added to the trace
 3. Configure the recorder behavior when instrumented code attempts to record data when no segment is open. The behavior we want is to log an error but continue.
 
-Here are links to documentation to help you figure it out:
+Here is some documentation to help you figure it out:
 
 * [Service Plugins](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-configuration-plugins)
 * [Recorder Configuration in Code](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-middleware-configuration-code)
@@ -192,7 +192,7 @@ Note: In case you're wondering why there's a trailing comma after `'ecs_plugin'`
 
 Earlier, you imported the `patch` function from the X-Ray SDK core. Use that to patch boto3 which is used by the mysfitsTableClient.
 
-Here is a link to documentation to help you figure it out:
+Here is some documentation to help you figure it out:
 
 * [Patching Libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
 
@@ -369,66 +369,104 @@ The pipeline will take a few minutes to complete, so feel free to move on to the
 
 ![CodePipeline for Like service](./images/01-03-likeServicePipeline.png)
 
-### 4. Generate some trace data
+### 4. Test your configuration
 
-1. Now that the Like service is instrumented, inbound requests will generate trace data.  Open the Mythical Mysfits site in a new tab.  This is the **S3WebsiteEndpoint** URL listed in your CloudFormation outputs.  
+Now that you've instrumented the like service, you should see additional trace data being reported to the service map in the X-Ray console whenever users use the like functionality in the application. This will include inbound http requests to the X-Ray service as well as downstream calls to DynamoDB when it increments the like counters for each mysfit liked.
 
-2. Click the heart icon on a few (recommended 7-9 clicks) mythical creatures to generate some requests to the like service.  
+#### a. Confirm you have a complete service map for the Mythical Mysfits application
 
-    If you open the Javascript console in your browser (e.g. in Chrome, you can find this in View->Developer->Javascript Console), you will see the requests coming in and exhibit one of three possible results - an immediate response (rare), a delayed response, or no response (i.e. a 404 HTTP code.
+Navigate to the [AWS X-Ray dashboard service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M)
 
-    ![Javascript console](./images/03-JSconsole.png)
+Open a new browser tab and load the Mythical Mysfits application by visiting the ALB's DNS name. The load balancer's DNS name is one of the outputs from the CloudFormation template you ran as a part of workshop setup. The bootstrap script you ran writes these outputs to a local JSON file in your Cloud9 IDE. Run the following command in your Cloud9 terminal to get the load balancer's DNS name:
 
-#### 3.7 Review the results in the X-Ray console.
+```
+$ cat ~/environment/multi-region-workshop/cfn-output.json | grep LoadBalancerDNS
+```
 
-1. Navigate to the [X-Ray dashboard](https://console.aws.amazon.com/xray/home) and you'll see the Service map which shows clients hitting the **Like** service.
+When the page loads, you should see a grid of mysfits and notice a heart icon in the bottom right corner of each box. Click on a few hearts for a few mysfits to generate some traffic to the Like service. The service was launched in chaos mode which randomly returns 404s and 500s, so you'd see more interesting data in the X-Ray service map. Keep clicking on the hearts until it lights up orange for a few.
 
-    On the surface, it appears everything is fine.  The Like service shows green which means it's returning 200 OK.  And average response time is in the milliseconds.  Something doesn't add up.  
+<details>
+<summary>Note: Javascript console</summary>
+If you open the Javascript console in your browser (e.g. in Chrome, you can find this in View->Developer->Javascript Console), you will see the requests and potential outcomes being successful or not.
+</details>
 
-2. Explore the dashboard a little deeper and see if you can find anything interesting that matches up to your findings from earlier labs.  
+TODO ADD SCREENSHOT OF LIKED MYSFITS
 
-    Expand the hint below for detailed steps to isolate the interesting traffic.
+Once you've liked a few mysfits, return to the tab with the X-Ray service map and you should see a service map representative of the Mythical Mysfits application, something like this -
 
-    <details>
-    <summary>HINT: Detailed steps to find key insights</summary>
+![Completed Service Map](./images/01-04a-completedServiceMap.png)
 
-    A good place to start is to look at the traces that X-Ray has collected.  Click on **Traces** from the left menu.  
+Take some time to explore the service map a bit more. Note the information you can glean by clicking on each service. Also, explore the raw trace data by clicking on **Trace** in the left menu.
 
-    X-Ray by default will show the `Last 5 minutes` of trace data.  Choose a longer time range like `Last 30 minutes` from the drop down in the upper right hand corner of the window, so we have more traces to review.  
+### 5. Reduce the signal from the noise
 
-    Notice an abundance of GET requests in the Trace list.  These are the ALB health checks mentioned earlier.  These are throwing off the statistics since the response time of those are in the milliseconds.  If you click on one of the GET request traces and select the **Raw data** tab, you'll see that the useragent is `ELB-HealthChecker/2.0`.  
+One thing you'll notice is an abundance of GET requests to the Like service which doesn't add up since the like funtionality is based on POST requests. These GETs are health checks from the ALB, which skews the statistics. Filter expressions to the rescue, and they do exactly as the name implies. It's an expression that filters based on given criteria, e.g. service name, errors, src/dst relationships, annotations. Feel free to experiment with filter expressions by entering them into the search bar in the X-Ray dashboard; for your reference - [filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
-    ![ELB health check trace](./images/03-elbHealthCheckTrace.png)
+Filter expressions can also be used to group traces. This is important because by creating a group, X-Ray will output the approximate trace counts for a given filter expression as a CloudWatch metric. Subsequently, you can create CloudWatch alarms or use these numbers in an operational dashboard, as appropriate. For example, you could create a trace group that filters out throttling (i.e. 429 error codes) to understand whether a service is overwhelmed.
 
-    Apply a filter expression to ignore those and look specifically for - POST messages, error codes, or lengthy response times.
+#### a. Filter POST requests to the Like Service
 
-    Go back to the main **Traces** page by clicking on the link from the left menu.  
+Create a trace group using a filter expression that extracts POST requests to the Like service. The generated CloudWatch metric will be an additional data point to help indicate service health.
 
-    Enter `service("like service") { responsetime > 1 OR error } AND http.method = "POST"` into the search bar to apply that filter.
+Note: There is a basic utility in the lab-1-xray/util folder that will generate artificial traffic to the like service as you work on implementing the filters. This may be more convenient than manually clicking through the website to generate requests. Choice is up to you. To use the utility, run this command -
 
-    Earlier when you instrumented the app, you labeled your service as `like service`.  
+```
+$ python ~/environment/multi-region-workshop/lab-1-xray/util/ryder.py
+```
 
-    The statements in the `{}` filter on `response time` and `error` which maps to a `404` response code.
+`Ctrl-C` will kill the process.
 
-    And lastly we're only looking at traces for `POST` messages.
+Here is some documentation to help you figure out the filter expressions:
 
-    If you want to retain this view for other users, you can create a filter expression group by selecting **Create group** in the drop down menu to the left of the search bar.
+* [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
-    ![X-Ray filter group](./images/03-filterGroup.png)
 
-    Check out [X-Ray filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html#console-filters-syntax) for other expressions to experiment with.
+<details>
+<summary>HINT: Detailed step by step</summary>
 
-    And finally, click on **Service Map** from the left menu.  You may have to reset the time range to be something longer, but notice with the filter expression applied, the service is showing stats that match up with the strange behavior, e.g. slower avg response time, and if your traces captured any 404 response codes, the colored ring around the like service will show the ratio of 404s (orange) to valid 200s (green).
+Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
 
-    ![X-Ray service map](./images/03-serviceMap.png)
-    </details>
+![Create group](./images/01-05a_createGroup.png)
+
+Enter a name, e.g. `like-service`
+
+Enter `service("Like Service") AND http.method = "POST"` into the filter expression field
+
+Click **Create**
+
+![Create group answer](./images/01-05a_createGroupAnswer.png)
+
+</details>
+
+#### b. Filter on HTTP error codes
+
+Create a trace group using filter expressions to catch 404s and 500s; the X-Ray service refers to these as errors and faults, respectively. The generated CloudWatch metric will be an additional data point to help indicate service health and potentially be used as an alarm for notifications or even automated failover.
+
+Here is some documentation to help you figure it out:
+
+* [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
+
+<details>
+<summary>HINT: Detailed step by step</summary>
+
+Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
+
+![Create group](./images/01-05a_createGroup.png)
+
+Enter a name, e.g. `like-service-errors-faults`
+
+Enter `service("Like Service") { error = true OR fault = true }` into the filter expression field
+
+Click **Create**
+
+</details>
 
 ### Checkpoint
-Congratulations!!!  You've successfully implemented X-Ray to trace inbound requests to the Like microservice and discovered valuable information and statistics.
+Congratulations!!!  You've successfully instrumented the Like service to enable tracing. You also used filter expressions to group important trace data. This data gets reported to CloudWatch as a metric which you can use for operational dashboards and setting up alarms. On to the next lab!
 
 Proceed to [Lab 2](../lab-2-agg)!
 
-[*^ back to top*](#management-and-operations-with-aws-fargate)
+[*^ back to top*](#distributed-tracing-with-AWS-X-Ray)
 
 ## Participation
 
