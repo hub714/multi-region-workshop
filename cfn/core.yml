@@ -443,6 +443,71 @@ Resources:
     Type: AWS::Logs::LogGroup
 
   MythicalServiceTaskDefinition:
+    Condition: NotDrRegion
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Core-Service-${AWS::StackName}
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Environment:
+            - Name: UPSTREAM_URL
+              Value: !GetAtt MythicalLoadBalancer.DNSName
+            - Name: DDB_TABLE_NAME
+              Value: !Ref DDBTableName
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+
+  LikeServiceTaskDefinition:
+    Condition: NotDrRegion
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Like-Service-${AWS::StackName}
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: like-service
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Environment:
+            - Name: CHAOSMODE
+              Value: 'off'
+            - Name: DDB_TABLE_NAME
+              Value: !Ref DDBTableName
+            - Name: LOGLEVEL
+              Value: 'ERROR'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LikeServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+
+  SecondaryMythicalServiceTaskDefinition:
+    Condition: IsInDrRegionTest
     Type: AWS::ECS::TaskDefinition
     Properties:
       Cpu: 256
@@ -472,7 +537,8 @@ Resources:
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
 
-  LikeServiceTaskDefinition:
+  SecondaryLikeServiceTaskDefinition:
+    Condition: IsInDrRegionTest
     Type: AWS::ECS::TaskDefinition
     Properties:
       Cpu: 256
@@ -503,13 +569,14 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+        
 
   CoreEcsService:
     Condition: IsInDrRegionTest
     DependsOn: MythicalListener
     Type: AWS::ECS::Service
     Properties:
-      TaskDefinition: !Ref MythicalServiceTaskDefinition
+      TaskDefinition: !Ref SecondaryMythicalServiceTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
       LoadBalancers:
@@ -531,7 +598,7 @@ Resources:
     DependsOn: MythicalListener
     Type: AWS::ECS::Service
     Properties:
-      TaskDefinition: !Ref LikeServiceTaskDefinition
+      TaskDefinition: !Ref SecondaryLikeServiceTaskDefinition
       DesiredCount: 1
       LaunchType: FARGATE
       LoadBalancers:
@@ -904,9 +971,17 @@ Outputs:
   StackName:
     Value: !Sub ${AWS::StackName}
   MythicalServiceTaskDefinition:
+    Condition: NotDrRegion
     Value: !Ref MythicalServiceTaskDefinition
   LikeServiceTaskDefinition:
+    Condition: NotDrRegion
     Value: !Ref LikeServiceTaskDefinition
+  SecondaryMythicalServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Value: !Ref SecondaryMythicalServiceTaskDefinition
+  SecondaryLikeServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Value: !Ref SecondaryLikeServiceTaskDefinition
   MythicalLikeGitRepositoryCloneUrl:
     Condition: NotDrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryCloneUrl'
