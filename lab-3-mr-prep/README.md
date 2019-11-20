@@ -1,3 +1,28 @@
+### Enabling Cloudwatch Dashboard to show multi-region metrics
+
+Now that you have deployed the stack in the secondary region, lets adjust the Cloudwatch dashboard that you created in the previous lab to include these new resources. This will provide visibility to the Mythical and Like services running across both regions on the same dashboard.
+
+If you are unfamiliar with Amazon Cloudwatch, you may consider creating a duplicate of the current Cloudwatch dashboard for safe keeping. That way you can always revert back to the original if you need to.
+
+<details>
+<summary>Instructions: How do I do this?</summary>
+* Select the Cloudwatch dashboard you wish to duplicate
+* Click **Actions** followed by **Save dashboard as...**
+* Enter a name for the new dashboard - **BackupOfMyDashboard**
+* Click **Save dashboard**
+</details>
+
+
+
+
+
+### X. Make a duplicate of the dashboard for safe-keeping.
+
+
+
+### End Enabling Cloudwatch Dashboard to show multi-region metrics
+
+
 # Mythical Mysfits: Multi-Region-Workshop
 
 ## Lab 3 - Prepping to make it multi region
@@ -48,11 +73,7 @@ Now that you have created the Singapore Global Table, you can test to see if it 
 
 ### 3.3 Global Accelerator <--this should probably be its own lab4 maybe. 
 
-### Enabling Cloudwatch Dashboard to show multi-region metrics
 
-Owen stuff in here
-
-### End Enabling Cloudwatch Dashboard to show multi-region metrics
 
 
 # Checkpoint 
