@@ -46,19 +46,27 @@ The most difficult part of a multi-region application is typically data synchron
 
 There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
 
-# It's totally possible that this will not be necessary.
+# It's totally possible that this will not be necessary. For now follow these instructions
 
 **Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
 
-In your source region (double check this) DynamoDB, select the table. It will be named 'Table-' followed by your chosen stack name.
+In your source region (double check this) DynamoDB, select the table. It will be named 'MythicalMysfits-DDB-\*' followed by your chosen stack name.
 
 ![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
 
-Next, choose the Global Tables tab from the top and go ahead and create your Global Table and choose your second region - just accept any messages to enable anything it needs and to create any roles it may need as well.
+Delete all items in your ddb table
 
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-config.png)
+Next, choose the Global Tables tab from the top, click **Enable Streams**, and go ahead and create your Global Table and choose your second region (US East N. Virginia)- just accept any messages to enable anything it needs and to create any roles it may need as well.
 
-Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
+![Configure DynamoDB with Global Tables](images/03-ddb-create-gt.png)
+
+Now that you have created the N. Virginia (US-East-1) Global Table, run this:
+<pre>
+  $ cd ~/environment/multi-region-workshop
+  $ bootstrap/ddb/load-ddb
+</pre>
+
+Take a look at DynamoDB in your **Primary Region** and also in your **Secondary Region**. You should see that the objects have already been propagated.
 
 ### Deployment Replication
 
@@ -143,7 +151,7 @@ Open the two files and replace these variables:
 </details>
 
 <details>
-<sumamry> Click here for a script that will do it for you</summary>
+<summary> Click here for a script that will do it for you</summary>
 <pre>
 [TODO] Haven't done this yet. Would have to get the region and then get the stack and then the outpots
 </pre>
@@ -172,7 +180,7 @@ If you are unfamiliar with Amazon Cloudwatch, you may consider creating a duplic
 
 <details>
     <summary>Instructions: How do I do this?</summary>
-    
+
 * Select the Cloudwatch dashboard you wish to duplicate
 * Click **Actions** followed by **Save dashboard as...**
 * Enter a name for the new dashboard - **BackupOfMyDashboard**
@@ -224,12 +232,12 @@ Modify the ALB HTTP Responses widget to show the metrics from the ALB in the sec
 
 <details>
 <summary>Show screenshot:</summary>
-    
+
 ![image](https://user-images.githubusercontent.com/23423809/69214680-7188c500-0b1c-11ea-8a81-cdb1d549dfb9.png)
 
 </details>
-    
-    
+
+
 ### X.b Add widgets for the Like and Mythical Services from Secondary region
 
 Following the same process from Lab 2, add a new widget for each of the Like and Mytical services. Modify the titles to be able to easily identify which region they are populating from. You should end up with something like this:
@@ -243,7 +251,7 @@ Youc can drag widgets around and move them into position wherever you like. You 
 
 ### X.c Add a widget to show statistics from the DynamoDB Global Table
 
-While we're at it, lets create a new widget showing the the Read Capacity Units and Write Capacity Units for our newly created Global Table. Monitoring the table ensures that we have full visibility of the amount of read and write activity which can be useful in troubleshooting efforts. 
+While we're at it, lets create a new widget showing the the Read Capacity Units and Write Capacity Units for our newly created Global Table. Monitoring the table ensures that we have full visibility of the amount of read and write activity which can be useful in troubleshooting efforts.
 
 Here's how:
 
