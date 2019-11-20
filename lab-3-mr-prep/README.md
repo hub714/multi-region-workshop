@@ -124,6 +124,19 @@ Youc can drag widgets around and move them into position wherever you like. You 
 
 [TODO - Add Andy's KPIs / other metrics from X-Ray]
 
+### X.c Add a widget to show statistics from the DynamoDB Global Table
+
+While we're at it, lets create a new widget showing the the Read Capacity Units and Write Capacity Units for our newly created Global Table. Monitoring the table ensures that we have full visibility of the amount of read and write activity which can be useful in troubleshooting efforts. 
+
+Here's how:
+
+* Create a new stacked area graph on the Cloudwatch Dashboard
+* Select **DynamoDB**, **Table Metrics**, **[insert table name]**, **ConsumedReadCapacityUnits** and **ConsumedWriteCapacityUnits**
+**ConsumedWriteCapacityUnits** for our DynamoDB Global Table.
+* Change the statistic type to **Sum**
+* Click **Create Widget**
+
+## Important - Save your Cloudwatch Dashboard! ##
 
 ### End Enabling Cloudwatch Dashboard to show multi-region metrics
 
