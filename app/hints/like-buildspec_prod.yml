@@ -5,7 +5,7 @@ phases:
     commands:
       - echo Assigning variables for repositories and regions
       - PRIMARY_LIKE_REPO_URI=REPLACEME_REPO_URI
-      - SECONDARY_LIKE_REPO_URI=REPLACEME_SECONDARY_REPO_URI
+      - SECONDARY_LIKE_REPO_URI=REPLACEME_LIKE_REPOURI_SECONDARY
       - PRIMARY_REGION=$AWS_DEFAULT_REGION
       # [Todo]: Change the name of your secondary region based on the region you selected as a secondary region
       - SECONDARY_REGION=REPLACEME_SECONDARY_REGION
@@ -17,7 +17,7 @@ phases:
       - echo Tagging Image for primary region
       - docker tag like-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $PRIMARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
       # Tag the image for the secondary region
-      - docker tag core-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $SECONDARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker tag like-service:$CODEBUILD_RESOLVED_SOURCE_VERSION $SECONDARY_LIKE_REPO_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
   post_build:
     commands:
       - echo Build completed on `date`

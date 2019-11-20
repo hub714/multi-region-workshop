@@ -569,7 +569,7 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
-        
+
 
   CoreEcsService:
     Condition: IsInDrRegionTest
@@ -933,11 +933,11 @@ Outputs:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'MythicalMysfitsServiceCodePipelineServiceRole' ] ]
   LoadBalancerDNS:
     Description: The DNS for the load balancer
-    Value: !Sub http://${MythicalLoadBalancer.DNSName}
+    Value: !GetAtt MythicalLoadBalancer.DNSName
   SecondaryLoadBalancerDNS:
     Condition: IsInDrRegionTest
     Description: The DNS for the load balancer
-    Value: !Sub http://${MythicalLoadBalancer.DNSName}
+    Value: !GetAtt MythicalLoadBalancer.DNSName
   DynamoTable:
     Condition: NotDrRegion
     Value: !Ref DDBTableName

@@ -5,7 +5,7 @@ phases:
     commands:
       - echo Assigning variables for repositories and regions
       - PRIMARY_CORE_REPO_URI=REPLACEME_REPO_URI
-      - SECONDARY_CORE_REPO_URI=REPLACEME_REPO_URI_SECONDARY
+      - SECONDARY_CORE_REPO_URI=REPLACEME_CORE_REPOURI_SECONDARY
       - PRIMARY_REGION=$AWS_DEFAULT_REGION
       # [Todo]: Change the name of your secondary region based on the region you selected as a secondary site.
       - SECONDARY_REGION=REPLACEME_SECONDARY_REGION

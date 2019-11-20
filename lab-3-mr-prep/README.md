@@ -76,7 +76,7 @@ Type in **CrossRegionDeploy** for the stage name.
 
 ![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
 
-Next we will configure the stage so that it deploys to ECS in the secondary region. Click on **Edit Stage** and then **Add Action**. Enter in the following details in the **Edit Action** popup:
+Next we will configure the stage so that it deploys to ECS in the secondary region. In the new CrossRegionDeploy stage, click **Add Action Group**. Enter in the following details in the **Edit Action** popup:
 
 **Edit Action**:
 * Click on **Add Action Group** and enter the following details:
@@ -95,6 +95,18 @@ Click **Done** and then **Save** at the top of the screen. Click through prompts
 **Do this again for the Like Service**
 
 ![Do it again](images/03-codepipeline-like.png)
+
+**Edit Action**:
+* Click on **Add Action Group** and enter the following details:
+* Action name: **CrossRegionDeploy**
+* Action provider: **Amazon ECS**
+* Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+* Input artifacts: **BuildArtifact**
+* Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+* Service name: **Select the service that includes "Core"**
+* Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
+
+![Do it again with the like](images/03-cp-createactiongroup-like.png)
 
 ### Update build scripts to upload docker images to both regions
 
@@ -121,11 +133,12 @@ We have created some completed buildspec files if you want to skip this portion.
   $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/buildspec_prod.yml
   $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
 
+Open the two files and replace these variables:
+* REPLACEME_SECONDARY_REGION with your secondary region (default **us-east-1**) in both buildspec_prod.yml files
+* REPLACEME_CORE_REPOURI_SECONDARY with the value of **SecondaryMythicalServiceEcrRepo** from the Cloudformation outputs in the Core service buildspec_prod.yml
+* REPLACEME_LIKE_REPOURI_SECONDARY with the value of **SecondaryLikeServiceEcrRepo** from the CloudFormation outputs in the Like service buildspec_prod.yml
 
-Open the two files and update these variables:
-* REPLACEME_SECONDARY_REGION in both buildspec_prod.yml files
-* SECONDARY_CORE_REPO_URI in the Core service buildspec_prod.yml
-* SECONDARY_LIKE_REPO_URI in the Like service buildspec_prod.yml
+*Note that in these labs we are hard coding values, but best practice is to use environment variables instead. This just simplifies the process for illustrative purposes.*
 </pre>
 </details>
 
