@@ -1,11 +1,19 @@
 # Mythical Mysfits: Multi-Region-Workshop
 
-## Lab 3 - Prepping to make it multi region
-**steve has slides on this - things u may have forgotten** - it's in chat
+## Lab 3 - Preparing for multi-region deployments
+<!-- **steve has slides on this - things u may have forgotten** - it's in chat -->
 
-In this lab, you will launch your app in another region and then use Global Accelerator to route traffic. 
+In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
 
-Here's a reference architecture for what you'll be building:
+These are the things that we will need to replicate and also automate:
+* Infrastructure
+  * Network
+  * Docker Repositories
+  * ECS
+* Container images
+* Application Deployments
+
+<!-- Here's a reference architecture for what you'll be building:
 
 [TODO] CREATE REF ARCHITECTURE PICTURE
 ![CodeBuild Create](images/arch-codebuild.png)
@@ -15,24 +23,30 @@ Here's what you'll be doing:
 [TODO] CREATE TOC
 * [Create AWS CodeBuild Project](#create-aws-codebuild-project)
 * [Create BuildSpec File](#create-buildspec-file)
-* [Test your AWS CodeBuild Project](#test-your-aws-codebuild-project)
+* [Test your AWS CodeBuild Project](#test-your-aws-codebuild-project) -->
 
-### 2.1 Artifact Replication
-- Also need to copy over artifacts for deployment
-- ECR cross region replication?
-- object replication in S3
-- codecommit x-region app
-- 
+### Infrastructure Replication
+At the beginning of the workshop, you used AWS CloudFormation to create the infrastructure. We'll do the same thing now to replicate it, but we'll enter in a different parameter.
 
-### Replicate The app to a second region
+First we will replicate the main infrastructure using a new CloudFormation stack. Note that there are a bunch of different ways to do this, like updating a CodePipeline pipeline to deploy to another region or using stacksets. We just make it a bit simpler by running this manually.
 
-    aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2
+<pre>
+$ cd ~/environment/multi-region-workshop
+$ aws cloudformation deploy --stack-name mm-secondary-region --template-file cfn/core.yml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides IsDrRegion=true --region us-east-1
+</pre>
 
-### 3.2 Replicate the Database
+Once it says CREATE_COMPLETE, navigate to the Outputs tab of the stack. Note the values of:
+* SecondaryLikeServiceEcrRepo
+* SecondaryMythicalServiceEcrRepo
+* SecondaryLoadBalancerDNS
 
-So now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
+### Database Replication
+
+The most difficult part of a multi-region application is typically data synchronization. Now that you have a separate stack, we need to set up DynamoDB so that it automatically replicates any data created using the app in the primary region.
 
 There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
+
+# It's totally possible that this will not be necessary.
 
 **Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
 
@@ -46,6 +60,109 @@ Next, choose the Global Tables tab from the top and go ahead and create your Glo
 
 Now that you have created the Singapore Global Table, you can test to see if it is working by creating a new misfit in the primary app you deployed in the second module. Then, look at the DynamoDB table in your secondary region, and see if you can see the record for the ticket you just created:
 
+### Deployment Replication
+
+Now that you have all your artifacts replicated into the secondary region, you can automate the deployments too. The CICD infrastructure is already provisioned for you. To automate the deployments into the secondary region, we'll use [AWS CodePipeline's Cross-Region Actions](https://aws.amazon.com/about-aws/whats-new/2018/11/aws-codepipeline-now-supports-cross-region-actions/).
+
+Navigate to the [CodePipeline console](http://console.aws.amazon.com/codepipeline) of the **PRIMARY** region. Click on the pipeline that starts with *Core*. Note that if your pipelines are not in a **Succeeded** state, there was a problem. Try to get your deployments into a **Succeeded** state before proceeding. You may have to re-run some setup scripts.
+
+![Select Core Pipeline](images/03-codepipeline-core.png)
+
+Click on **Edit** and **Add stage** after the Deploy stage.
+
+![Edit Core {Pipeline}](images/03-codepipeline-edit.png)
+
+Type in **CrossRegionDeploy** for the stage name.
+
+![Edit Core {Pipeline}](images/03-codepipeline-cross-region-deploy.png)
+
+Next we will configure the stage so that it deploys to ECS in the secondary region. In the new CrossRegionDeploy stage, click **Add Action Group**. Enter in the following details in the **Edit Action** popup:
+
+**Edit Action**:
+* Click on **Add Action Group** and enter the following details:
+* Action name: **CrossRegionDeploy**
+* Action provider: **Amazon ECS**
+* Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+* Input artifacts: **BuildArtifact**
+* Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+* Service name: **Select the service that includes "Core"**
+* Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
+
+![Create Action](images/03-cp-createactiongroup.png)
+
+Click **Done** and then **Save** at the top of the screen. Click through prompts until you're back at the pipeline. At this point, you should see your pipeline again and the final stage will be grey because it has not run yet.
+
+**Do this again for the Like Service**
+
+![Do it again](images/03-codepipeline-like.png)
+
+**Edit Action**:
+* Click on **Add Action Group** and enter the following details:
+* Action name: **CrossRegionDeploy**
+* Action provider: **Amazon ECS**
+* Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
+* Input artifacts: **BuildArtifact**
+* Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
+* Service name: **Select the service that includes "Core"**
+* Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
+
+![Do it again with the like](images/03-cp-createactiongroup-like.png)
+
+### Update build scripts to upload docker images to both regions
+
+As part of the infrastructure automation, we gave you the application for both **core** and **like** services. You will now have to manually update the buildspec_prod.yml file to upload the container image to another region.
+
+First, we will update the `core-service` app. Navigate to the core-service codecommit repo. You can do this in the side navigation pane or via CLI.
+
+Console:
+![Find file on nav pane](images/03-core-service_buildspec.png)
+
+CLI:
+<pre>
+  $ cd ~/environment/<b>REPLACEME_SECONDARY_CORE_REPO_NAME</b>
+</pre>
+
+Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions. Within both of the buildspecs there are [TODO] lines to guide you through what you'll need to do. It's your choice if you want to understand how the build process works. Otherwise...
+
+[TODO:] mod bootstrap to change these buildspecs
+
+<details>
+<summary>Click here for a completed buildspec and commands to copy them in:</summary>
+We have created some completed buildspec files if you want to skip this portion. They are in the app/hints folder.
+<pre>
+  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/buildspec_prod.yml
+  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
+
+Open the two files and replace these variables:
+* REPLACEME_SECONDARY_REGION with your secondary region (default **us-east-1**) in both buildspec_prod.yml files
+* REPLACEME_CORE_REPOURI_SECONDARY with the value of **SecondaryMythicalServiceEcrRepo** from the Cloudformation outputs in the Core service buildspec_prod.yml
+* REPLACEME_LIKE_REPOURI_SECONDARY with the value of **SecondaryLikeServiceEcrRepo** from the CloudFormation outputs in the Like service buildspec_prod.yml
+
+*Note that in these labs we are hard coding values, but best practice is to use environment variables instead. This just simplifies the process for illustrative purposes.*
+</pre>
+</details>
+
+<details>
+<sumamry> Click here for a script that will do it for you</summary>
+<pre>
+[TODO] Haven't done this yet. Would have to get the region and then get the stack and then the outpots
+</pre>
+</details>
+
+### Trigger deployment again
+
+Finally, add all the files to both repos and trigger deployments:
+
+<pre>
+  $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/
+  $ git add -A
+  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git push origin master
+  $ cd ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/
+  $ git add -A
+  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git push origin master
+</pre>
 
 ### Enabling Cloudwatch Dashboard to show multi-region metrics
 
@@ -138,10 +255,35 @@ Here's how:
 
 ## Important - Save your Cloudwatch Dashboard! ##
 
-### End Enabling Cloudwatch Dashboard to show multi-region metrics
+# Checkpoint
 
-
-
-# Checkpoint 
+At this time, your application should be running in both regions. Hit the secondary **SecondaryLoadBalancerDNS** that you copied earlier. You should see the exact same site you had before.
 
 Proceed to [Lab 4](../lab-4-globalacc)!
+
+
+<!--
+# disregard
+
+In this section, you will begin preparations for moving your application to multiple regions. It's very common to forget a number of steps along the way as many people will mainly think of infrastructure and the application itself to move over, but there are a number of assets that also need to be referenced.
+
+These are the things that we will need to replicate and also automate:
+* Infrastructure
+  * Network
+  * Docker Repositories
+  * ECS
+* Container images
+* Application Deployments
+
+
+- Also need to copy over artifacts for deployment
+- ECR cross region replication?
+- object replication in S3
+- codecommit x-region app
+-
+
+
+
+### Replicate The app to a second region
+
+    aws cloudformation deploy --stack-name second-region --template-file core.yml --capabilities CAPABILITY_NAMED_IAM --region us-west-2 -->
