@@ -164,11 +164,104 @@ Finally, add all the files to both repos and trigger deployments:
   $ git push origin master
 </pre>
 
+### Enabling Cloudwatch Dashboard to show multi-region metrics
+
+Now that you have deployed the stack in the secondary region, lets adjust the Cloudwatch dashboard that you created in the previous lab to include these new resources. This will provide visibility to the Mythical and Like services running across both regions on the same dashboard.
+
+If you are unfamiliar with Amazon Cloudwatch, you may consider creating a duplicate of the current Cloudwatch dashboard for safe keeping. That way you can always revert back to the original if you need to.
+
+<details>
+    <summary>Instructions: How do I do this?</summary>
+    
+* Select the Cloudwatch dashboard you wish to duplicate
+* Click **Actions** followed by **Save dashboard as...**
+* Enter a name for the new dashboard - **BackupOfMyDashboard**
+* Click **Save dashboard**
+
+</details>
+
+
+
+
+
+### X. Edit the widgets to show metrics from the other region
+
+With Amazon Cloudwatch, we have the ability to stack metrics on top of each other in a widget that contains a graph. This will be useful in our case where we are viewing the same metric type, over two resources. We'll do this in the steps below in addition to adding the metrics from the other region.
+
+Hint - see documentation for [Editing a Graph on a Cloudwatch Dashboard](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/edit_graph_dashboard.html)
+
+### X.a Edit the ALB widgets
+
+As we are now adding in metrics from two different regions, we must navigate to the secondary region and load the dashboard from there. This is because when referring to metrics within a dashboard, Cloudwatch can only see resources local to that region.
+
+Modify the ALB Requests Per Minute widget to show the metrics from the ALB in the secondary region:
+
+* Open up the [Cloudwatch Dashboards](https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:) page and select the dashboard you created in the previous lab
+* Change the region (top right of screen) to your Secondary region
+* Change the widget to a stacked area
+* Add in the **RequestCount** metric to this widget from the ALB
+* Change the metric labels to identify the correct region for that metric
+
+<details>
+    <summary>Hint with screenshots:</summary>
+
+* Hover over the widget and select Edit in the top right hand corner
+![image](https://user-images.githubusercontent.com/23423809/69213104-03420380-0b18-11ea-8cff-e25b09c70fb5.png)
+* Change the graph type from a Line to Stacked Area. Then select the All Metrics tab and add in the **requestcount** metric from the ALB
+![image](https://user-images.githubusercontent.com/23423809/69213968-83696880-0b1a-11ea-9d71-18a2c1dbfd62.png)
+* Select Graphed Metrics and change the label to match the region
+![image](https://user-images.githubusercontent.com/23423809/69214232-2d48f500-0b1b-11ea-83a4-2ae1e7dfeade.png)
+* Click **Update widget**
+    </details>
+
+Modify the ALB HTTP Responses widget to show the metrics from the ALB in the secondary region:
+
+* Change the widget to a stacked area
+* Add in the **HTTP 2XX / 4XX / 5XX Count** metrics from the ALB
+* Change the metric labels to identify the correct region for that metric
+* Ensure the region you put in the label matches the region in the details
+* Click **Update widget**
+
+<details>
+<summary>Show screenshot:</summary>
+    
+![image](https://user-images.githubusercontent.com/23423809/69214680-7188c500-0b1c-11ea-8a81-cdb1d549dfb9.png)
+
+</details>
+    
+    
+### X.b Add widgets for the Like and Mythical Services from Secondary region
+
+Following the same process from Lab 2, add a new widget for each of the Like and Mytical services. Modify the titles to be able to easily identify which region they are populating from. You should end up with something like this:
+
+![image](https://user-images.githubusercontent.com/23423809/69214987-46eb3c00-0b1d-11ea-8317-94c55dad4af2.png)
+
+Feel free to move the widgets around the dashboard to suit your style following the instructions in the [https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/move_resize_graph_dashboard.html](Cloudwatch documentation).
+Youc can drag widgets around and move them into position wherever you like. You can also add a text widget to show a title, include links to a knowledgebase wiki or internal tooling. Get creative!
+
+[TODO - Add Andy's KPIs / other metrics from X-Ray]
+
+### X.c Add a widget to show statistics from the DynamoDB Global Table
+
+While we're at it, lets create a new widget showing the the Read Capacity Units and Write Capacity Units for our newly created Global Table. Monitoring the table ensures that we have full visibility of the amount of read and write activity which can be useful in troubleshooting efforts. 
+
+Here's how:
+
+* Create a new stacked area graph on the Cloudwatch Dashboard
+* Select **DynamoDB**, **Table Metrics**, **[insert table name]**, **ConsumedReadCapacityUnits** and **ConsumedWriteCapacityUnits**
+**ConsumedWriteCapacityUnits** for our DynamoDB Global Table.
+* Change the statistic type to **Sum**
+* Click **Create Widget**
+
+## Important - Save your Cloudwatch Dashboard! ##
+
 # Checkpoint
 
 At this time, your application should be running in both regions. Hit the secondary **SecondaryLoadBalancerDNS** that you copied earlier. You should see the exact same site you had before.
 
 Proceed to [Lab 4](../lab-4-globalacc)!
+
+
 <!--
 # disregard
 
