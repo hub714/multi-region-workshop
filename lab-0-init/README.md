@@ -12,17 +12,17 @@ Here's what you'll be doing:
 * [Familiarize Yourself with the Mythical Workshop Environment](#familiarize-yourself-with-the-workshop-environment)
 * [Configure Cloud 9 Mythical Working Environment](#configure-cloud9-working-environment)
 
-# STOP! Pay attention here because it matters! Are you at an AWS Event? 
+# STOP! Pay attention here because it matters! Are you at an AWS Event?
 <details>
 <summary>
-<b>Click here</b> if you are attending an AWS event andthe organizers are giving me a code to use pre-generated accounts
+<b>Click here</b> if you are attending an AWS event an the organizers are giving you a code to use pre-generated accounts
 </summary>
-Follow the instructions that were given to you to get access to the account first. The stack will be deployed for your already. 
+Follow the instructions that were given to you to get access to the account first. The stack will be deployed for your already.
 </details>
 
 <details>
 <summary>
-<b>Click here</b> if you are not attending an AWS event and you will be using your own accounts
+<b>Click here</b> if you are not attending an AWS event and you will be using your own accounts or this is a dry-run.
 </summary>
 
 ### Deploy Mythical CloudFormation Stack
@@ -42,7 +42,7 @@ Region | Launch Template
 **Oregon** (us-west-2) | [![Launch Mythical Mysfits Stack into Oregon with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
 **Ohio** (us-east-2) | [![Launch Mythical Mysfits Stack into Ohio with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
 **Ireland** (eu-west-1) | [![Launch Mythical Mysfits Stack into Ireland with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)  
-**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml) 
+**Singapore** (ap-southeast-1) | [![Launch Mythical Mysfits Stack into Singapore with CloudFormation](/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=mm-multi-region&templateURL=https://multi-region-workshop.s3-us-west-2.amazonaws.com/core.yml)
 
 The links above will bring you to the AWS CloudFormation console with the **Specify an Amazon S3 template URL** field populated and radio button selected. Just click **Next**. If you do not have this populated, please click the link above.
 
@@ -67,8 +67,6 @@ The CloudFormation stack will take a few minutes to launch.  Periodically check 
 ![CloudFormation CREATE_COMPLETE](images/cfn-create-complete.png)
 
 If there was an [error](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html#troubleshooting-errors) during the stack creation process, CloudFormation will rollback and terminate. You can investigate and troubleshoot by looking in the Events tab. Any errors encountered during stack creation will appear in the event stream as a failure.
-
-</details>
 
 ### Familiarize yourself with the workshop environment
 
@@ -111,7 +109,7 @@ $ git clone https://github.com/hub714/multi-region-workshop.git
 
 2\. Bootstrap
 
-There are a number of files that need to be created in order for your services to run later, so let's create them now. This will also bootstrap and create services. 
+There are a number of files that need to be created in order for your services to run later, so let's create them now. This will also bootstrap and create services.
 
 <pre>
 $ cd ~/environment/multi-region-workshop
@@ -123,7 +121,8 @@ $ bootstrap/setup
 You made it to the end of Lab 0. You've deployed a service.
 
 [Proceed to Lab 1](../lab-1-xray)
+</details>
 
+# Too far
 
-
-
+If you got here, you've gone too far. Go back and take a look at the section that says "**STOP! Pay attention here because it matters! Are you at an AWS Event?**"
