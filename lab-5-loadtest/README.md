@@ -36,9 +36,9 @@ Taking everything into account from the above, lets make sure we understand what
 
 * **watch** - repeat the following command
 * **ab** - Apache Bench load genetator
-* **-p** flag specifies an empty file that would normally contain the HTTP payload
-* **postfile.txt** - specified the empty payload file required for AB to send a POST request
-* **http://<Insert your Global Accelerator Endpoint>/mysfits/da5303ae-5aba-495c-b5d6-eb5c4a66b941/like** - the full URI of what we're POSTing to.
+* **-p** flag specifies that we are sending a HTTP POST request
+* **postfile.txt** - specifies the empty payload file required for AB to send a POST request
+* **http:/<Insert your Global Accelerator Endpoint>/mysfits/da5303ae-5aba-495c-b5d6-eb5c4a66b941/like** - the full URI of what we're POSTing to.
   
 Example - 
 `watch ab -p postfile.txt http://a174d65be73381239e.awsglobalaccelerator.com/mysfits/da5303ae-5aba-495c-b5d6-eb5c4a66b941/like`
@@ -103,8 +103,23 @@ Next, go back to the Cloudwatch dashboard, wait a few minutes and you should see
 
 If you want to test out the Traffic Dial feature of the Global Accelerator some more, in order to become more familiar with it, now is a good time. To do this, navigate back to the Global Accelerator Listener page and modify the Traffic Dials and watch how the Cloudwatch dashboard metrics respond. For example, if you set the Primary region to 90% and the Secondary region to 10%, after a few minutes you should notice substantially more traffic being served from the Primary region's metrics in the Cloudwatch dashboard. While in theory this sounds obvious, it is good to see it working in practice.
 
-### 5.5 Artificially "break" the application in one region to force failover
+### 5.5 Artificially "break" the application in Primary region to force failover to Secondary
 
-[TO BE COMPLETED]
+Before we trigger a failover of the application between regions, it is important to understand how the Global Accelerator knows whether or not the ALB endpoint within each of the regions is healthy or not. As the entry point to each stack in each region in this example is an Application Load Balancer, the Global Accelerator uses the same healthcheck settings as defined in the ALB within the region. In short, if the ALB to our Mythical Mysfits stack within region becomes "unhealthy", the Global Accelerator deems this endpoint to be unavailable and redirects all traffic to other healthy endpoints defined within our Global Accelerator Listener. (You can read more on how this works within the [documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works.html#about-endpoint-groups-automatic-health-checks)).
 
-Idea - Stop the task in region A, which will cause the ALB to fail its healthcheck, causing the GA to fail its healthcheck, causing the GA to force-fail traffic to the other healthy endpoints.
+Kick off the AB command to start sending some traffic to the Global Accelerator.
+
+Next, lets force the ALB within our Primary region into an unhealthy state by stopping the Mysfits and Like tasks in our ECS cluster. Once these are stopped, the ALB healthchecks will fail. To do this we need to set the "Desired Tasks" to 0 for each service.
+
+* Within the AWS Management Console, navigate to the ECS Service. Select the Cluster running our services
+* Under the Services tab, select the Like-Service, click **Update*
+* Set the **Number of tasks** to 0, click **Skip to review** and then click **Update Service**
+* Click **View Service** to return to the Service screen
+
+Repeat the above steps for the Mythical-Service.
+
+ECS will update the service and drain any existing connections from the running tasks. This will cause the ALB to fail its healthchecks and therefore fail the Global Accelerator healthchecks for the endpoint in this region.
+
+Your Cloudwatch dashboard should now reflect the traffic pattern expected - within a couple of minutes, you should see that the Primary region is no longer serving requests for the Like service and that the Secondary region is accepting all the traffic.
+
+[INSERT SCREENSHOT OF DASHBOARD]

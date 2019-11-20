@@ -18,7 +18,7 @@ Parameters:
 
 Mappings:
   # Hard values for the subnet masks. These masks define
-  # the range of internal IP addresses that can be assigned.
+  # the range of internal IP addresses that can be assigned..
   # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
   # There are four subnets which cover the ranges:
   #
@@ -443,11 +443,12 @@ Resources:
     Type: AWS::Logs::LogGroup
 
   MythicalServiceTaskDefinition:
+    Condition: NotDrRegion
     Type: AWS::ECS::TaskDefinition
     Properties:
       Cpu: 256
       ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
-      Family: !Sub Multi-Region-Service-${AWS::StackName}
+      Family: !Sub Core-Service-${AWS::StackName}
       Memory: 512
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -473,11 +474,12 @@ Resources:
           Essential: true
 
   LikeServiceTaskDefinition:
+    Condition: NotDrRegion
     Type: AWS::ECS::TaskDefinition
     Properties:
       Cpu: 256
       ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
-      Family: !Sub Multi-Region-Like-Service-${AWS::StackName}
+      Family: !Sub Like-Service-${AWS::StackName}
       Memory: 512
       NetworkMode: awsvpc
       RequiresCompatibilities:
@@ -503,6 +505,115 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+
+  SecondaryMythicalServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Multi-Region-Service-${AWS::StackName}
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: service
+          Image: docker.io/nginx:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Environment:
+            - Name: UPSTREAM_URL
+              Value: !GetAtt MythicalLoadBalancer.DNSName
+            - Name: DDB_TABLE_NAME
+              Value: !Ref DDBTableName
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+
+  SecondaryLikeServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: 256
+      ExecutionRoleArn: !GetAtt EcsServiceRole.Arn
+      Family: !Sub Multi-Region-Like-Service-${AWS::StackName}
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: like-service
+          Image: docker.io/nginx:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: http
+          Environment:
+            - Name: CHAOSMODE
+              Value: 'off'
+            - Name: DDB_TABLE_NAME
+              Value: !Ref DDBTableName
+            - Name: LOGLEVEL
+              Value: 'ERROR'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LikeServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: awslogs-mythicalmysfits-service
+          Essential: true
+
+
+  CoreEcsService:
+    Condition: IsInDrRegionTest
+    DependsOn: MythicalListener
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref SecondaryMythicalServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref FargateContainerSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
+
+  LikeEcsService:
+    Condition: IsInDrRegionTest
+    DependsOn: MythicalListener
+    Type: AWS::ECS::Service
+    Properties:
+      TaskDefinition: !Ref SecondaryLikeServiceTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+        ContainerPort: 8080
+        ContainerName: like-service
+      Cluster: !Ref MythicalEcsCluster
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !Ref FargateContainerSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnetOne
+            - !Ref PrivateSubnetTwo
 
   MythicalLoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -588,33 +699,13 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: NotDrRegion
     Properties:
-      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd_dev.yml"
+      TemplateURL: "https://multi-region-workshop.s3-us-west-2.amazonaws.com/cicd.yml"
       Parameters:
         MythicalEcsCluster: !Ref MythicalEcsCluster
         CoreServiceName: !Sub ${AWS::StackName}_Mythical-Service
         LikeServiceName: !Sub ${AWS::StackName}_Like-Service
         CfnStackName: !Sub ${AWS::StackName}
 
-  # MythicalCoreEcsService:
-  #   Condition: IsInDrRegionTest
-  #   Type: AWS::ECS::Service
-  #   Properties:
-  #     TaskDefinition: !Ref MythicalServiceTaskDefinition
-  #     DesiredCount: 1
-  #     LaunchType: FARGATE
-  #     LoadBalancers:
-  #     - TargetGroupArn: !Ref MythicalServiceTargetGroup
-  #       ContainerPort: 8080
-  #       ContainerName: service
-  #     Cluster: !Ref MythicalEcsCluster
-  #     NetworkConfiguration:
-  #       AwsvpcConfiguration:
-  #         AssignPublicIp: DISABLED
-  #         SecurityGroups:
-  #           - !Ref FargateContainerSecurityGroup
-  #         Subnets:
-  #           - !Ref PrivateSubnetOne
-  #           - !Ref PrivateSubnetTwo
 
 
   # Working on a function to delete all extra stuff - disregard for now
@@ -665,6 +756,7 @@ Resources:
               logger.debug('Context: {}'.format(context))
               responseData = {}
 
+
               # Immediately respond on Delete
               if event['RequestType'] == 'Delete':
                   try:
@@ -692,7 +784,7 @@ Resources:
                       if ecsServicesToDelete['serviceArns'] != []:
                           for serviceName in ecsServicesToDelete['serviceArns']:
                               ecsDeleteResponse = ecsClient.delete_service(
-                                  cluster='Cluster-mr-test',
+                                  cluster=EcsClusterName,
                                   service=serviceName,
                                   force=True)
 
@@ -842,6 +934,10 @@ Outputs:
   LoadBalancerDNS:
     Description: The DNS for the load balancer
     Value: !GetAtt MythicalLoadBalancer.DNSName
+  SecondaryLoadBalancerDNS:
+    Condition: IsInDrRegionTest
+    Description: The DNS for the load balancer
+    Value: !GetAtt MythicalLoadBalancer.DNSName
   DynamoTable:
     Condition: NotDrRegion
     Value: !Ref DDBTableName
@@ -849,10 +945,22 @@ Outputs:
     Condition: NotDrRegion
     Value: !Ref MythicalProfile
   MythicalServiceEcrRepo:
+    Condition: NotDrRegion
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
   LikeServiceEcrRepo:
+    Condition: NotDrRegion
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
+  SecondaryMythicalServiceEcrRepo:
+    Condition: IsInDrRegionTest
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MythicalServiceRepo}
+  SecondaryLikeServiceEcrRepo:
+    Condition: IsInDrRegionTest
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LikeServiceRepo}
   XrayEcrRepo:
+    Condition: NotDrRegion
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
+  SecondaryXrayEcrRepo:
+    Condition: IsInDrRegionTest
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Xray}
   MythicalServiceTargetGroupArn:
     Value: !Ref MythicalServiceTargetGroup
@@ -863,9 +971,17 @@ Outputs:
   StackName:
     Value: !Sub ${AWS::StackName}
   MythicalServiceTaskDefinition:
+    Condition: NotDrRegion
     Value: !Ref MythicalServiceTaskDefinition
   LikeServiceTaskDefinition:
+    Condition: NotDrRegion
     Value: !Ref LikeServiceTaskDefinition
+  SecondaryMythicalServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Value: !Ref SecondaryMythicalServiceTaskDefinition
+  SecondaryLikeServiceTaskDefinition:
+    Condition: IsInDrRegionTest
+    Value: !Ref SecondaryLikeServiceTaskDefinition
   MythicalLikeGitRepositoryCloneUrl:
     Condition: NotDrRegion
     Value: !GetAtt 'MythicalCiCdStack.Outputs.MythicalLikeGitRepositoryCloneUrl'
