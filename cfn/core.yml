@@ -493,7 +493,7 @@ Resources:
               Protocol: http
           Environment:
             - Name: CHAOSMODE
-              Value: 'off'
+              Value: 'on'
             - Name: DDB_TABLE_NAME
               Value: !Ref DDBTableName
             - Name: LOGLEVEL

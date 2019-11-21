@@ -2,22 +2,22 @@
 
 Observability helps quantify how we are able to meet our availability requirements. An important aspect of observability especially in a microservices architecture is distributed tracing. This enables the ability to profile a request as it passes through our application architecture which may involve one or more services and potentially interactions with backend data stores. Data captured from traces helps teams understand how the application behaves under various conditions and can be incredibly helpful when issues arise. For example, developers can use the data to identify inefficiencies in code and prioritize their sprints. Operations or SRE teams can use the data to diagnose or triage unusual latencies or failures. Infrastructure engineers can use the data to make adjustments to resident scaling policies or resources supporting particular services.
 
-AWS X-Ray is a distributed tracing service that provides an SDK to instrument your applications, a daemon to aggregate and deliver trace data to the X-Ray service, and a dashboard to view a service map which is a visualization of the trace data. If you would like to read more in depth about X-Ray, check out these links to documentation - [What is X-Ray?](https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html) and [X-Ray Concepts](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html)
+AWS X-Ray is a distributed tracing service that provides a SDK to instrument your applications, a daemon to aggregate and deliver trace data to the X-Ray service, and a dashboard to view a service map which is a visualization of the trace data. If you would like to read more in depth about X-Ray, check out these links to documentation - [What is X-Ray?](https://docs.aws.amazon.com/xray/latest/devguide/aws-xray.html) and [X-Ray Concepts](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html)
 
 In this lab, you'll continue where our lead developer left off before she was pulled to work on personalization for the application. No surprises there since the PM just got back from re:Invent, and there were many AI/ML sessions in his schedule.
+
+![Lab 1 X-Ray](./images/lab-1.png)
 
 The Mythical Mysfits application is made up of (2) microservices:
 
 1. The Mysfits service serves the Angular front-end application and hosts an API that returns Mysfit profiles from DynamoDB.
 2. The Like service tracks the number of likes for a particular mysfit. When a visitor clicks on the heart icon next to a mysfit in the app, a counter for that mysfit's profile is incremented in DynamoDB.
 
-Our lead developer successfully instrumented the Mysfits service, capturing data for inbound http requests and downstream calls to DynamoDB. If you navigate to the [AWS X-Ray dashboard's service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M), you should see some trace data.
-
-We need your help to do the same for the Like service, so we have a more complete picture. Don't worry if you're not a developer, we'll guide you with the lab instructions and provide hints along the way. If you really get stuck, skip to the final hint where we provide the fully instrumented app code. Good luck!
+Our lead developer successfully instrumented the Mysfits service, capturing data for inbound http requests and downstream calls to DynamoDB. We need your help to do the same for the Like service, so we have a more complete picture. Don't worry if you're not a developer, we'll guide you with the lab instructions and provide hints along the way. If you really get stuck, skip to the final hint where we provide the fully instrumented app code. Good luck!
 
 ### Instructions
 
-### 1. Add the X-Ray daemon as a sidecar container in the Like service
+### [1] Add the X-Ray daemon as a sidecar container in the Like service
 
 <details>
 <summary>Learn more: What is the X-Ray daemon?</summary>
@@ -41,26 +41,24 @@ A task definition is a JSON template that instructs ECS how to launch your conta
 Further reading: [ECS Documentation: Task Definitions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
 </details>
 
-Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
+1. Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
 
-Find the Like microservice task definition in the list; the name will start with `Multi-Region-Like-Service-` followed by the CloudFormation stack name you set.  
+2. Find the Like microservice task definition in the list; the name will start with `Multi-Region-Like-Service-` followed by the CloudFormation stack name you set.  
 
-Select the checkbox next to the task definition, and click **Create new revision**.
+3. Select the checkbox next to the task definition, and click **Create new revision**.
 
-Scroll down to "Container Definitions" and click **Add container**.
+4. Scroll down to "Container Definitions" and click **Add container**.
 
-Complete the following fields:
+5. Complete the following fields:
 
-- **Container name** - enter `xray-daemon`
-- **Image** - enter `amazon/aws-xray-daemon`
-- **Port mappings** - enter `2000` for container port, and select `udp` for protocol
+* **Container name** - enter `xray-daemon`
+* **Image** - enter `amazon/aws-xray-daemon`
+* **Port mappings** - enter `2000` for container port, and select `udp` for protocol
 
-Your configuration will look similar to this:
-![X-Ray sidecar](./images/03-xraySidecar.png) TODO ADD NEW SCREENSHOT
+    Your configuration will look similar to this:
+![X-Ray sidecar](./images/01-01a_xrayTaskDef.png)
 
-Click **Add**
-
-Click **Create**
+6. Click **Add**, then click **Create**
 
 #### b. Update the Like service ECS service to reference the new task definition
 
@@ -72,30 +70,32 @@ An ECS service maintains a desired number of running ECS tasks.  This is ideal f
 Further reading: [ECS Documentation: Services](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
 </details>
 
-Navigate to [Clusters](https://console.aws.amazon.com/ecs/home#/clusters) in the ECS dashboard.  
+1. Navigate to [Clusters](https://console.aws.amazon.com/ecs/home#/clusters) in the ECS dashboard.  
 
-Click on your workshop ECS cluster; the name will start with `Cluster-` followed by the CloudFormation stack name.  
+2. Click on your workshop ECS cluster; the name will start with `Cluster-` followed by the CloudFormation stack name.  
 
-Check the checkbox next to the **Like** service and click **Update**.
+3. Check the checkbox next to the **Like** service and click **Update**.
 
-Configure the following fields:
+4. Configure the following fields:
 
-- **Task Definition** - select the latest from the dropdown menu for revision
-- **Force new deployment** - check this box
+* **Task Definition** - select the latest from the dropdown menu for revision
+* **Force new deployment** - check this box
 
-Your configuration will look similar to this:
+    Your configuration will look similar to this:
 ![Update Like service](./images/03-updateLikeService.png)
 
-Leave all other fields as they are and keep clicking **Next step** until you reach the review page, then click **Update Service**
+5. Leave all other fields as they are and keep clicking **Next step** until you reach the review page, then click **Update Service**
 
-Click **View Service** and you should see the deployment begin. This will take a few minutes, so feel free to move on to the next step where you'll begin to instrument the Like service.
+6. Click **View Service** and you should see the deployment begin. This will take a few minutes, so feel free to move on to the next step where you'll begin to instrument the Like service.
 
-### 2. Instrument the Like service code using the AWS X-Ray SDK and Cloud9
+### [2] Instrument the Like service code using the AWS X-Ray SDK and Cloud9
 
 <details>
 <summary>Learn more: The AWS X-Ray SDK</summary>
 
 AWS provides X-Ray SDKs for many popular programming languages such as python, javascript, go, java, etc. The SDK provides interceptors to trace incoming HTTP requests, client handlers to instrument AWS SDK clients used to call other AWS services, and an HTTP client to instrument calls to other http web services. You can also patch certain supported libraries such as database clients. Support will vary with each language specific SDK, so consult the documentation to read more. Since Mythical Mysfits services are based on Flask, you'll use the python SDK. Additionally, the X-Ray SDK for Python includes middleware that traces incoming requests for Flask (and Django) frameworks. Convenient! If you aren't using either of these, but still use python for your implementation, you can use the python SDK to manually instrument segments.
+
+When instrumenting an app with the X-Ray SDK, you first need to install the SDK. For convenience, that was already done for you during workshop bootstrap. If you look at `requirements.txt` for the Like service, you'll see we include the `aws-xray-sdk` when the container image is built.
 
 Further reading:
 
@@ -104,43 +104,77 @@ Further reading:
 
 </details>
 
-When instrumenting an app with the X-Ray SDK, you first need to install the SDK. For convenience, that was already done for you during workshop bootstrap. If you look at `requirements.txt` for the Like service, you'll see we include the `aws-xray-sdk` when the container image is built.
+You have (2) options at this point:
 
-You should already have the Cloud9 IDE open from bootsrapping the workshop environment in the last lab. The bootstrap script cloned the Like service code to your Cloud9 IDE. Expand on the Like service folder in the directory tree to the left; the name will start with `like-service-` followed by the CloudFormation stack name and more text.
+1. Follow the steps below, using the provided documentation (and hints if you get stuck), to add lines of instrumentation code to the Like service. If you go this route, try not spend more than 5 min on each step if you're at an AWS event with a time limit. We want you to be able to get through as many of the labs as possible.
 
-![Cloud9 Like Service Code](./images/01-02a-likeService.png)
+    OR
 
-Expand the `service` folder and double-click on `mysfits_like.py` to load it in the editor pane. Your teammate commented the code to help guide you. You'll also notice `TODO` statements following those comments, that's where you'll add lines of code to accomplish the todo. Take a moment to review the codebase and move on to the first step once you're ready.
+2. Copy the instrumented code from the lab-1-xray/answers folder and move on to Section 3 where you push the instrumented code to the CI/CD pipeline for build and deployment. If you're short on time or would rather focus on the traffic management bits later in the workshop, reveal and follow the `Option 2 step by step` below.
 
-#### a. Import helper functions and classes from the X-Ray SDK to trace incoming HTTP requests for Flask applications and downstream calls to DynamoDB
-
-Add (3) lines of code to:
-
-1. Load the X-Ray recorder class from the SDK's core module
-2. Load the X-Ray patch function from the SDK's core module
-3. Load the middleware function for flask apps
-
-Note: There are a couple approaches to patching client libraries using either the `patch_all` or `patch` modules. We choose the latter for specificity, but feel free to use the easy button that is the former.
-
-Here is some documentation to help you figure it out:
-
-* [X-Ray Python Middleware](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-middleware.html)
-* [Patching libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
-* [General AWS X-Ray SDK for Python API reference](https://docs.aws.amazon.com/xray-sdk-for-python/latest/reference/index.html)
+Choose your adventure!
 
 <details>
-<summary>HINT: Completed imports</summary>
+<summary>Option 2 step by step</summary>
 
-```
-# Load functions/classes from aws xray sdk to instrument this service to trace incoming 
-# http requests and downstream aws sdk calls. This includes the X-Ray Flask middleware
-# [TODO] load x-ray recorder class
-# [TODO] load x-ray patch function
-# [TODO] load middleware function for flask
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch
-from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
-```
+1. In the Cloud9 IDE terminal window, navigate to the Like service working directory cloned from Code Commit.
+
+    ```
+    $ cd ~/environment/like-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
+    ```
+
+2. Copy the instrumented Like service code from the answers directory into this working directory.
+
+    ```
+    $ cp ~/environment/multi-region-workshop/lab-1-xray/answers/mysfits_like.py .
+    ```
+
+    [*^ Click here to fast-forward to Section 3 to deploy the changes for the Like service*](#[3]-deploy-the-changes-you-made-to-the-like-service)
+
+<br>
+</details>
+
+If you're choosing Option 1, read on...
+
+In this section, you will use the Cloud9 IDE, which should still be open from the last lab, to make edits to the Like service code. In each of the following activities, **you will be editing one file, `mysfits_like.py`**. The bootstrap script you ran in the last lab cloned the Like service code to your Cloud9 IDE
+
+#### a. Import necessary functions and classes from the X-Ray SDK to trace incoming HTTP requests for Flask applications and downstream calls to DynamoDB
+
+1. Expand the Like service folder in the directory tree to the left; the name will start with `like-service-` followed by the CloudFormation stack name and more text.
+
+    ![Cloud9 Like Service Code](./images/01-02a-likeService.png)
+
+2. Expand the `service` folder and double-click on `mysfits_like.py` to load it in the editor pane. Your teammate commented the code to help guide you. You'll also notice `TODO` statements following those comments, that's where you'll add lines of code to accomplish the todo.
+
+3. Add (3) lines of code to:
+
+    * Load the X-Ray recorder class from the SDK's core module
+    * Load the X-Ray patch function from the SDK's core module
+    * Load the middleware function for flask apps
+
+    Note: There are a couple approaches to patching client libraries using either the `patch_all` or `patch` modules. We choose the latter for specificity, but feel free to explore `patch_all` on your own time.
+
+    Here is some documentation to help you, and if you get confused, see the hint in the next step:
+
+    * [X-Ray Python Middleware](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-middleware.html)
+    * [Patching libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
+    * [General AWS X-Ray SDK for Python API reference](https://docs.aws.amazon.com/xray-sdk-for-python/latest/reference/index.html)
+
+4. Once you feel like you've added the appropriate lines, compare your work with the hint below.
+
+    <details>
+    <summary>HINT: Completed imports</summary>
+
+    ```
+    # Load functions/classes from aws xray sdk to instrument this service to trace incoming 
+    # http requests and downstream aws sdk calls. This includes the X-Ray Flask middleware
+    # [TODO] load x-ray recorder class
+    # [TODO] load x-ray patch function
+    # [TODO] load middleware function for flask
+    from aws_xray_sdk.core import xray_recorder
+    from aws_xray_sdk.core import patch
+    from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
+    ```
 
 </details>
 
@@ -158,78 +192,84 @@ Further reading:
 
 </details>
 
-Configure (3) attributes in the xray_recorder class to:
+1. Configure (3) attributes in the xray_recorder class to:
 
-1. Set the name of the service to be 'Like Service'
-2. Enable the ECS service plugin for additional metadata to be added to the trace
-3. Configure the recorder behavior when instrumented code attempts to record data when no segment is open. The behavior we want is to log an error but continue.
+    * Set the name of the service to be 'Like Service'
+    * Enable the ECS service plugin for additional metadata to be added to the trace
+    * Configure the recorder behavior when instrumented code attempts to record data when no segment is open. The behavior we want is to log an error but continue.
 
-Here is some documentation to help you figure it out:
+    Here is some documentation to help you, and if you get confused, see the hint in the next step:
 
-* [Service Plugins](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-configuration-plugins)
-* [Recorder Configuration in Code](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-middleware-configuration-code)
-* [AWS X-Ray SDK API Reference - Configure Global Recorder](https://docs.aws.amazon.com/xray-sdk-for-python/latest/reference/configurations.html)
+    * [Service Plugins](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-configuration-plugins)
+    * [Recorder Configuration in Code](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-configuration.html#xray-sdk-python-middleware-configuration-code)
+    * [AWS X-Ray SDK API Reference - Configure Global Recorder](https://docs.aws.amazon.com/xray-sdk-for-python/latest/reference/configurations.html)
 
-<details>
-<summary>HINT: Completed xray_recorder configuration</summary>
+2. Once you feel like you've added the appropriate lines, compare your work with the hint below.
 
-```
-# Configure xray_recorder class to name your service and load the ECS plugin for 
-# additional metadata.
-# [TODO] configure the x-ray recorder with a service name and load the ecs plugin
-plugins = ('ecs_plugin',)
-xray_recorder.configure(
-  service = 'Like Service',
-  plugins = plugins,
-  context_missing='LOG_ERROR'
-)
-```
+    <details>
+    <summary>HINT: Completed xray_recorder configuration</summary>
 
-Note: In case you're wondering why there's a trailing comma after `'ecs_plugin'`, it's because plugins is a tuple, and in Python a single value tuple or singleton requires a comma.
-</details>
+    ```
+    # Configure xray_recorder class to name your service and load the ECS plugin for 
+    # additional metadata.
+    # [TODO] configure the x-ray recorder with a service name and load the ecs plugin
+    plugins = ('ecs_plugin',)
+    xray_recorder.configure(
+    service = 'Like Service',
+    plugins = plugins,
+    context_missing='LOG_ERROR'
+    )
+    ```
+
+    Note: In case you're wondering why there's a trailing comma after `'ecs_plugin'`, it's because plugins is a tuple, and in Python a single value tuple or singleton requires a comma.
+    </details>
 
 #### c. Patch AWS SDK clients to enable tracing of downstream calls to DynamoDB
 
-Earlier, you imported the `patch` function from the X-Ray SDK core. Use that to patch boto3 which is used by the mysfitsTableClient.
+1. Earlier, you imported the `patch` function from the X-Ray SDK core. Use that to patch boto3 which is used by the mysfitsTableClient.
 
-Here is some documentation to help you figure it out:
+    Here is some documentation to help you, and if you get confused, see the hint in the next step:
 
-* [Patching Libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
+    * [Patching Libraries](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-patching.html)
 
-<details>
-<summary>HINT: Completed boto3 patching</summary>
+2. Once you feel like you've added the appropriate lines, compare your work with the hint below.
 
-```
-# Configure X-Ray to trace service client calls to downstream AWS services
-# [TODO] patch the boto3 library
-libraries = ('boto3',)
-patch(libraries)
-```
+    <details>
+    <summary>HINT: Completed boto3 patching</summary>
 
-Note: In case you're wondering why there's a trailing comma after `'boto3'`, it's because libraries is a tuple, and in Python a single value tuple or singleton requires a comma.
+    ```
+    # Configure X-Ray to trace service client calls to downstream AWS services
+    # [TODO] patch the boto3 library
+    libraries = ('boto3',)
+    patch(libraries)
+    ```
 
-</details>
+    Note: In case you're wondering why there's a trailing comma after `'boto3'`, it's because libraries is a tuple, and in Python a single value tuple or singleton requires a comma.
+
+    </details>
 
 #### d. And finally, configure the Flask middleware
 
-Instantiate the Flask middleware to enable tracing.
+1. Instantiate the Flask middleware to enable tracing.
 
-Here's is a link to documentation to help you figure it out:
+    Here is some documentation to help you, and if you get confused, see the hint in the next step:
 
-* [Adding Flask Middleware](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-middleware.html#xray-sdk-python-adding-middleware-flask)
+    * [Adding Flask Middleware](https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python-middleware.html#xray-sdk-python-adding-middleware-flask)
 
-<details>
-<summary>HINT: Completed enabling Flask middleware</summary>
+2. Once you feel like you've added the appropriate lines, compare your work with the hint below.
 
-```
-# Instantiate the Flask middleware
-# [TODO] configure middleware with the flask app and x-ray recorder
-XRayMiddleware(app, xray_recorder)
-```
+    <details>
+    <summary>HINT: Completed enabling Flask middleware</summary>
 
-Note: In case you're wondering why there's a trailing comma after `'boto3'`, it's because libraries is a tuple, and in Python a single value tuple or singleton requires a comma.
+    ```
+    # Instantiate the Flask middleware
+    # [TODO] configure middleware with the flask app and x-ray recorder
+    XRayMiddleware(app, xray_recorder)
+    ```
 
-</details>
+    Note: In case you're wondering why there's a trailing comma after `'boto3'`, it's because libraries is a tuple, and in Python a single value tuple or singleton requires a comma.
+
+    </details>
 
 #### e. Checkpoint
 
@@ -322,7 +362,7 @@ if __name__ == "__main__":
 
 Now you are ready to check in your code and let the CI/CD pipeline build revised container images and re-deploy the Like service with Fargate.
 
-### 3. Deploy the changes you made to the Like service
+### [3] Deploy the changes you made to the Like service
 
 Since Mythical Mysfits moved to a microservices architecture, it was apparent that an automated CI/CD pipeline was necessary in order to remain agile. The dev team adopted [AWS CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html) which coordinates a few tasks:
 
@@ -332,73 +372,68 @@ Since Mythical Mysfits moved to a microservices architecture, it was apparent th
 
 #### a. Check in Like service code to kick off the pipeline
 
-In your Cloud9 terminal, navigate to the Like service folder.
+1. In your Cloud9 terminal, navigate to the Like service folder.
 
-```
-$ cd ~/environment/like-service-[PUSH TAB TO AUTO COMPLETE AND PRESS ENTER]
-```
+    ```
+    $ cd ~/environment/like-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
+    ```
 
-Commit your updated code and push to master. If you're not familiar with git commands, expand the hint below for step by step.
+2. Commit your updated code and push to master. If you're not familiar with git commands, expand the hint below for step by step.
 
-<details>
-<summary>HINT: Git commands step by step</summary>
+    <details>
+    <summary>HINT: Git commands step by step</summary>
 
-Check that the like service code was modified.
-```
-$ git status
-```
-Add file to staging.
-```
-$ git add service/
-```
-Commit the file to your local repository.
-```
-$ git commit -m "instrumented like service with xray"
-```
-Push the commit to CodeCommit (remote repository)
-```
-$ git push origin master
-```
+    Check that the like service code was modified.
+    ```
+    $ git status
+    ```
+    Add file to staging.
+    ```
+    $ git add service/
+    ```
+    Commit the file to your local repository.
+    ```
+    $ git commit -m "instrumented like service with xray"
+    ```
+    Push the commit to CodeCommit (remote repository)
+    ```
+    $ git push origin master
+    ```
 
-The commands and output should look similar to this:
-![Push committed code](./images/01-03-commitInstrumented.png)
+    The commands and output should look similar to this:
+    ![Push committed code](./images/01-03-commitInstrumented.png)
 
-</details>
+    </details>
 
-The pipeline will take a few minutes to complete, so feel free to move on to the next step. If you want to watch the pipeline, navigate to the [CodePipeline dashboard](https://console.aws.amazon.com/codesuite/codepipeline/pipelines) and click on the pipeline for the Like service. When it's completed, it will look similar to the screenshot below.
+The pipeline will take a few minutes to complete, so feel free to move on to the next section. If you want to watch the pipeline, navigate to the CodePipeline dashboard in the AWS console and click on the pipeline for the Like service which begins with `LikePipeline-`. When it's completed, it will look similar to the screenshot below.
 
 ![CodePipeline for Like service](./images/01-03-likeServicePipeline.png)
 
-### 4. Test your configuration
+### [4] Test your configuration
 
 Now that you've instrumented the like service, you should see additional trace data being reported to the service map in the X-Ray console whenever users use the like functionality in the application. This will include inbound http requests to the X-Ray service as well as downstream calls to DynamoDB when it increments the like counters for each mysfit liked.
 
 #### a. Confirm you have a complete service map for the Mythical Mysfits application
 
-Navigate to the [AWS X-Ray dashboard service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M)
+1. Navigate to the [AWS X-Ray dashboard service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M)
 
-Open a new browser tab and load the Mythical Mysfits application by visiting the ALB's DNS name. The load balancer's DNS name is one of the outputs from the CloudFormation template you ran as a part of workshop setup. The bootstrap script you ran writes these outputs to a local JSON file in your Cloud9 IDE. Run the following command in your Cloud9 terminal to get the load balancer's DNS name:
+2. Open a new browser tab and load the Mythical Mysfits application by visiting the ALB's DNS name. The load balancer's DNS name is one of the outputs from the CloudFormation template you ran as a part of workshop setup. The bootstrap script you ran writes these outputs to a local JSON file in your Cloud9 IDE. Run the following command in your Cloud9 terminal to get the load balancer's DNS name:
 
-```
-$ cat ~/environment/multi-region-workshop/cfn-output.json | grep LoadBalancerDNS
-```
+    ```
+    $ cat ~/environment/multi-region-workshop/cfn-output.json | grep LoadBalancerDNS
+    ```
 
-When the page loads, you should see a grid of mysfits and notice a heart icon in the bottom right corner of each box. Click on a few hearts for a few mysfits to generate some traffic to the Like service. The service was launched in chaos mode which randomly returns 404s and 500s, so you'd see more interesting data in the X-Ray service map. Keep clicking on the hearts until it lights up orange for a few.
+3. When the page loads, you should see a grid of mysfits and notice a heart icon in the bottom right corner of each box. Click on a few hearts for a few mysfits to generate some traffic to the Like service. The service was launched with chaos mode 'on' which randomly returns 404s and 500s, so you'd see more interesting data in the X-Ray service map. Keep clicking on the hearts until it lights up orange for a few mysfits.
 
-<details>
-<summary>Note: Javascript console</summary>
-If you open the Javascript console in your browser (e.g. in Chrome, you can find this in View->Developer->Javascript Console), you will see the requests and potential outcomes being successful or not.
-</details>
+    ![Liked Mysfit](./images/01-04a_mysfitLike.png)
 
-TODO ADD SCREENSHOT OF LIKED MYSFITS
+4. Once you've liked a few mysfits, return to the tab with the X-Ray service map and you should see a service map representative of the Mythical Mysfits application, something like this -
 
-Once you've liked a few mysfits, return to the tab with the X-Ray service map and you should see a service map representative of the Mythical Mysfits application, something like this -
+    ![Completed Service Map](./images/01-04a-completedServiceMap.png)
 
-![Completed Service Map](./images/01-04a-completedServiceMap.png)
+5. Take some time to explore the service map a bit more. Note the information you can glean by clicking on each service. Also, explore the raw trace data by clicking on **Trace** in the left menu.
 
-Take some time to explore the service map a bit more. Note the information you can glean by clicking on each service. Also, explore the raw trace data by clicking on **Trace** in the left menu.
-
-### 5. Reduce the signal from the noise
+### [5] Reduce the signal from the noise
 
 One thing you'll notice is an abundance of GET requests to the Like service which doesn't add up since the like funtionality is based on POST requests. These GETs are health checks from the ALB, which skews the statistics. Filter expressions to the rescue, and they do exactly as the name implies. It's an expression that filters based on given criteria, e.g. service name, errors, src/dst relationships, annotations. Feel free to experiment with filter expressions by entering them into the search bar in the X-Ray dashboard; for your reference - [filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
@@ -406,58 +441,72 @@ Filter expressions can also be used to group traces. This is important because b
 
 #### a. Filter POST requests to the Like Service
 
-Create a trace group using a filter expression that extracts POST requests to the Like service. The generated CloudWatch metric will be an additional data point to help indicate service health.
+1. Create a trace group using a filter expression that extracts POST requests to the Like service. The generated CloudWatch metric will be an additional data point to help indicate service health.
 
-Note: There is a basic utility in the lab-1-xray/util folder that will generate artificial traffic to the like service as you work on implementing the filters. This may be more convenient than manually clicking through the website to generate requests. Choice is up to you. To use the utility, run this command -
+    Note: There is a basic utility in the lab-1-xray/utils folder that will generate a constant flow of artificial traffic to the like service as you work on implementing the filters. This may be more convenient than manually clicking through the website to generate requests. Choice is up to you. To use the utility, run this command -
 
-```
-$ python ~/environment/multi-region-workshop/lab-1-xray/util/ryder.py
-```
+    ```
+    $ python ~/environment/multi-region-workshop/lab-1-xray/utils/ryder.py
+    ```
 
-`Ctrl-C` will kill the process.
+    You will be prompted for an endpoint to target. Enter the load balancer DNS name. The command and output should look something like this -
 
-Here is some documentation to help you figure out the filter expressions:
+    ```
+    whiterabbit:~/environment/like-service-mmm-MythicalCiCdStack-WZO1F61QZRZX/service (master) $ python ~/environment/multi-region-workshop/lab-1-xray/utils/ryder.py
+    Enter an ENDPOINT:PORT combination [port is optional]: alb-mmm-1270147538.us-west-2.elb.amazonaws.com
+    Request 0 returned: <Response [500]>
+    Request 1 returned: <Response [404]>
+    Request 2 returned: <Response [404]>
+    Request 3 returned: <Response [200]>
+    Request 4 returned: <Response [404]>
+    Request 5 returned: <Response [404]>
+    ```
+    
 
-* [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
+    `Ctrl-C` will kill the process.
+
+    Here is some documentation to help you along. If you get stuck/confused or are short on time, reveal the hint below for step by step:
+
+    * [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
 
 <details>
 <summary>HINT: Detailed step by step</summary>
 
-Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
+1. Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
 
-![Create group](./images/01-05a_createGroup.png)
+    ![Create group](./images/01-05a_createGroup.png)
 
-Enter a name, e.g. `like-service`
+2. Enter a name, e.g. `like-service`
 
-Enter `service("Like Service") AND http.method = "POST"` into the filter expression field
+3. Enter `service("Like Service") AND http.method = "POST"` into the filter expression field
 
-Click **Create**
+4. Click **Create**
 
-![Create group answer](./images/01-05a_createGroupAnswer.png)
+    ![Create group answer](./images/01-05a_createGroupAnswer.png)
 
 </details>
 
 #### b. Filter on HTTP error codes
 
-Create a trace group using filter expressions to catch 404s and 500s; the X-Ray service refers to these as errors and faults, respectively. The generated CloudWatch metric will be an additional data point to help indicate service health and potentially be used as an alarm for notifications or even automated failover.
+1. Create a trace group using filter expressions to catch 404s and 500s; the X-Ray service refers to these as errors and faults, respectively. The generated CloudWatch metric will be an additional data point to help indicate service health and potentially be used as an alarm for notifications or even automated failover.
 
-Here is some documentation to help you figure it out:
+    Here is some documentation to help you along. If you get stuck/confused or are short on time, reveal the hint below for step by step::
 
-* [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
+    * [Filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
 <details>
 <summary>HINT: Detailed step by step</summary>
 
-Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
+1. Click on **Create group** in the dropdown menu next to the X-Ray dashboard's filtering search bar.
 
-![Create group](./images/01-05a_createGroup.png)
+    ![Create group](./images/01-05a_createGroup.png)
 
-Enter a name, e.g. `like-service-errors-faults`
+2. Enter a name, e.g. `like-service-errors-faults`
 
-Enter `service("Like Service") { error = true OR fault = true }` into the filter expression field
+3. Enter `service("Like Service") { error = true OR fault = true }` into the filter expression field
 
-Click **Create**
+4. Click **Create**
 
 </details>
 

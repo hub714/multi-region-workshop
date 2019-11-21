@@ -2,6 +2,7 @@ import requests
 import random
 import os
 import time
+import sys
 
 mysfits = [
             '0e37d916-f960-4772-a25a-01b762b5c1bd',
@@ -19,9 +20,16 @@ mysfits = [
 ]
 
 if 'ENDPOINT' in os.environ:
-    URL = "http://"+os.environ['ENDPOINT']    
+    x = os.environ['ENDPOINT']    
+elif (sys.version_info > (3,0)):
+    x = input("Enter an ENDPOINT:PORT combination [port is optional]: ")
+else: 
+    x = raw_input("Enter an ENDPOINT:PORT combination [port is optional]: ")
+
+if (x.startswith('http')):
+    URL = x
 else:
-    URL = "http://"+raw_input("Enter an ENDPOINT:PORT combination: ")
+    URL = "http://"+x
 
 for n in range(1200):
     r = requests.post(URL+"/mysfits/%s/like" % mysfits[random.randint(0,11)])
