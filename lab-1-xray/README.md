@@ -84,7 +84,7 @@ Further reading: [ECS Documentation: Services](https://docs.aws.amazon.com/Amazo
     Your configuration will look similar to this:
 ![Update Like service](./images/03-updateLikeService.png)
 
-5. Leave all other fields as they are and keep clicking **Next step** until you reach the review page, then click **Update Service**
+5. Leave all other fields as they are and click **Skip to review**. Once on the review page, click **Update Service**
 
 6. Click **View Service** and you should see the deployment begin. This will take a few minutes, so feel free to move on to the next step where you'll begin to instrument the Like service.
 
@@ -415,29 +415,30 @@ Now that you've instrumented the like service, you should see additional trace d
 
 #### a. Confirm you have a complete service map for the Mythical Mysfits application
 
-1. Navigate to the [AWS X-Ray dashboard service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M)
-
-2. Open a new browser tab and load the Mythical Mysfits application by visiting the ALB's DNS name. The load balancer's DNS name is one of the outputs from the CloudFormation template you ran as a part of workshop setup. The bootstrap script you ran writes these outputs to a local JSON file in your Cloud9 IDE. Run the following command in your Cloud9 terminal to get the load balancer's DNS name:
+1. If you already have the ALB's DNS name handy, move to step 2. Otherwise, retrieve the ALB's DNS name from the CloudFormation stack outputs. The output values are written to a JSON file local to your Cloud9 environment as a part of the bootstrap script. Run the following command in your Cloud9 terminal to get the load balancer's DNS name:
 
     ```
     $ cat ~/environment/multi-region-workshop/cfn-output.json | grep LoadBalancerDNS
     ```
+Note: You can also visit the CloudFormation dashboard, click on the workshop stack and find LoadBalancerDNS in the outputs tab.
 
-3. When the page loads, you should see a grid of mysfits and notice a heart icon in the bottom right corner of each box. Click on a few hearts for a few mysfits to generate some traffic to the Like service. The service was launched with chaos mode 'on' which randomly returns 404s and 500s, so you'd see more interesting data in the X-Ray service map. Keep clicking on the hearts until it lights up orange for a few mysfits.
+2. Open a new tab and enter the load balancer DNS name to load the Mythical Mysfits application.  When the page loads, you should see a grid of mysfits and notice a heart icon in the bottom right corner of each box. Click on a few hearts for a few mysfits to generate some traffic to the Like service. The service was launched with chaos mode 'on' which randomly returns 404s and 500s, so you'd see more interesting data in the X-Ray service map. Keep clicking on the hearts until it lights up orange for a few mysfits.
 
     ![Liked Mysfit](./images/01-04a_mysfitLike.png)
 
-4. Once you've liked a few mysfits, return to the tab with the X-Ray service map and you should see a service map representative of the Mythical Mysfits application, something like this -
+3. Once you've liked a few mysfits, open a new browser tab and navigate to the [AWS X-Ray dashboard service map view](http://console.aws.amazon.com/xray/home#/service-map?timeRange=PT30M). You should see a service map representative of the Mythical Mysfits application, something like this -
 
     ![Completed Service Map](./images/01-04a-completedServiceMap.png)
 
-5. Take some time to explore the service map a bit more. Note the information you can glean by clicking on each service. Also, explore the raw trace data by clicking on **Trace** in the left menu.
+4. Take some time to explore the service map a bit more. Note the information you can glean by clicking on each service. Also, explore the raw trace data by clicking on **Trace** in the left menu.
 
 ### [5] Reduce the signal from the noise
 
 One thing you'll notice is an abundance of GET requests to the Like service which doesn't add up since the like funtionality is based on POST requests. These GETs are health checks from the ALB, which skews the statistics. Filter expressions to the rescue, and they do exactly as the name implies. It's an expression that filters based on given criteria, e.g. service name, errors, src/dst relationships, annotations. Feel free to experiment with filter expressions by entering them into the search bar in the X-Ray dashboard; for your reference - [filter expression documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html)
 
 Filter expressions can also be used to group traces. This is important because by creating a group, X-Ray will output the approximate trace counts for a given filter expression as a CloudWatch metric. Subsequently, you can create CloudWatch alarms or use these numbers in an operational dashboard, as appropriate. For example, you could create a trace group that filters out throttling (i.e. 429 error codes) to understand whether a service is overwhelmed.
+
+Note: Throughout this workshop, we're going to focus purely on the Like service to focus time and effort. In reality, you'd want to implement filter expressions for all services in your application architecture, especially if you are going to use trace data to help determine application health and availability for failover purposes, for example.
 
 #### a. Filter POST requests to the Like Service
 

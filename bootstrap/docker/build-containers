@@ -2,7 +2,7 @@
 
 SERVICE_ECR_REPO=$(jq < cfn-output.json -r '.MythicalServiceEcrRepo')
 LIKE_SERVICE_ECR_REPO=$(jq < cfn-output.json -r '.LikeServiceEcrRepo')
-XRAY_ECR_REPO=$(jq < cfn-output.json -r '.XrayEcrRepo')
+#XRAY_ECR_REPO=$(jq < cfn-output.json -r '.XrayEcrRepo')
 API_ENDPOINT=$(jq < cfn-output.json -er '.LoadBalancerDNS')
 
 if which gsed; then
@@ -24,6 +24,6 @@ docker build -t like-service:latest app/like-service
 docker tag like-service:latest $LIKE_SERVICE_ECR_REPO:latest
 docker push $LIKE_SERVICE_ECR_REPO:latest
 
-docker build -t x-ray-daemon app/xray
-docker tag x-ray-daemon:latest $XRAY_ECR_REPO:latest
-docker push $XRAY_ECR_REPO:latest
+#docker build -t x-ray-daemon app/xray
+#docker tag x-ray-daemon:latest $XRAY_ECR_REPO:latest
+#docker push $XRAY_ECR_REPO:latest

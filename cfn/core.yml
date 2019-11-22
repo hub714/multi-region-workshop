@@ -383,6 +383,7 @@ Resources:
           AttributeType: S
         - AttributeName: LawChaos
           AttributeType: S
+      BillingMode: PAY_PER_REQUEST
       GlobalSecondaryIndexes:
         - IndexName: LawChaosIndex
           KeySchema:
@@ -392,9 +393,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
         - IndexName: GoodEvilIndex
           KeySchema:
             - AttributeName: GoodEvil
@@ -403,15 +401,9 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
       KeySchema:
         - AttributeName: MysfitId
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
 
   MythicalEnvironment:
     Type: AWS::Cloud9::EnvironmentEC2
@@ -472,6 +464,18 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+        - Name: xray-daemon
+          Image: amazon/aws-xray-daemon
+          PortMappings: 
+            - ContainerPort: 2000
+              Protocol: udp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: xray-daemon
 
   LikeServiceTaskDefinition:
     Condition: NotDrRegion
@@ -505,6 +509,18 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+        - Name: xray-daemon
+          Image: amazon/aws-xray-daemon
+          PortMappings: 
+            - ContainerPort: 2000
+              Protocol: udp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LikeServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: xray-daemon
 
   SecondaryMythicalServiceTaskDefinition:
     Condition: IsInDrRegionTest
@@ -536,6 +552,18 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
+        - Name: xray-daemon
+          Image: amazon/aws-xray-daemon
+          PortMappings: 
+            - ContainerPort: 2000
+              Protocol: udp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref MythicalServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: xray-daemon
 
   SecondaryLikeServiceTaskDefinition:
     Condition: IsInDrRegionTest
@@ -569,7 +597,18 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: awslogs-mythicalmysfits-service
           Essential: true
-
+        - Name: xray-daemon
+          Image: amazon/aws-xray-daemon
+          PortMappings: 
+            - ContainerPort: 2000
+              Protocol: udp
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LikeServiceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: xray-daemon
 
   CoreEcsService:
     Condition: IsInDrRegionTest
@@ -602,7 +641,7 @@ Resources:
       DesiredCount: 1
       LaunchType: FARGATE
       LoadBalancers:
-      - TargetGroupArn: !Ref MythicalServiceTargetGroup
+      - TargetGroupArn: !Ref LikeServiceTargetGroup
         ContainerPort: 8080
         ContainerName: like-service
       Cluster: !Ref MythicalEcsCluster
