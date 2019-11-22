@@ -130,9 +130,9 @@ Find the buildspec_prod file in both mysfits-service and like-service. Update th
 We have created some completed buildspec files if you want to skip this portion. They are in the app/hints folder.
 <pre>
   $ cd ~/environment/core-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
-  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml .
+  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml buildspec_prod.yml
   $ cd ~/environment/like-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
-  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml .
+  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml buildspec_prod.yml
 
 Open the two files and replace these variables:
 * REPLACEME_SECONDARY_REGION with your secondary region (default **us-east-1**) in both buildspec_prod.yml files
