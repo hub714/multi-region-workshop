@@ -17,7 +17,9 @@ Our lead developer successfully instrumented the Mysfits service, capturing data
 
 ### Instructions
 
-### [1] Add the X-Ray daemon as a sidecar container in the Like service
+### [1] Quick note about the X-Ray daemon
+
+When you instrument an application with the X-Ray SDK to enable tracing, trace data is sent to the X-Ray service via an X-Ray daemon process. To save time in the workshop and focus on the more interesting bits, the CloudFormation template you ran already included the X-Ray daemon as a sidecar container in the Mysfits and Like service ECS task definitions. Just know that this is how trace data is being relayed to the X-Ray service. Also, this process can run as a local process for non-containerized applications or as a standalone service, expand the Learn more section below for documentation links to read more on the topic if you're interested.
 
 <details>
 <summary>Learn more: What is the X-Ray daemon?</summary>
@@ -25,68 +27,12 @@ The AWS X-Ray daemon is an open source software application that listens for tra
 
 Further reading:
 
+* [X-Ray daemon documentation](https://docs.aws.amazon.com/xray/latest/devguide/xray-daemon.html)
 * [X-Ray daemon github repo](https://github.com/aws/aws-xray-daemon)
 * [X-Ray daemon permissions](https://docs.aws.amazon.com/xray/latest/devguide/xray-daemon.html#xray-daemon-permissions)
 * [X-Ray sample dockerfile](https://docs.aws.amazon.com/xray/latest/devguide/xray-daemon-ecs.html#xray-daemon-ecs-build)
 * [Application Tracing on Fargate with AWS X-Ray](https://github.com/aws-samples/aws-xray-fargate)
 </details>
-
-#### a. Edit the Like service task definition to include the X-Ray daemon container
-
-<details>
-<summary>Learn more: Need a refresher on ECS task definitions?</summary>
-
-A task definition is a JSON template that instructs ECS how to launch your container(s). In it you can specify task and container resource requirements, expose listening ports, run one or more container images, and more. If you're familiar with Docker run arguments, they are similar.
-
-Further reading: [ECS Documentation: Task Definitions](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html)
-</details>
-
-1. Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
-
-2. Find the Like microservice task definition in the list; the name will start with `Like-Service-` followed by the CloudFormation stack name you set.  
-
-3. Select the checkbox next to the task definition, and click **Create new revision**.
-
-4. Scroll down to "Container Definitions" and click **Add container**.
-
-5. Complete the following fields:
-
-* **Container name** - enter `xray-daemon`
-* **Image** - enter `amazon/aws-xray-daemon`
-* **Port mappings** - enter `2000` for container port, and select `udp` for protocol
-
-    Your configuration will look similar to this:
-![X-Ray sidecar](./images/01-01a_xrayTaskDef.png)
-
-6. Click **Add**, then click **Create**
-
-#### b. Update the Like service ECS service to reference the new task definition
-
-<details>
-<summary>Learn more: Need a refresher on ECS services?</summary>
-
-An ECS service maintains a desired number of running ECS tasks.  This is ideal for long running processes like web servers.
-
-Further reading: [ECS Documentation: Services](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
-</details>
-
-1. Navigate to [Clusters](https://console.aws.amazon.com/ecs/home#/clusters) in the ECS dashboard.  
-
-2. Click on your workshop ECS cluster; the name will start with `Cluster-` followed by the CloudFormation stack name.  
-
-3. Check the checkbox next to the **Like** service and click **Update**.
-
-4. Configure the following fields:
-
-* **Task Definition** - select the latest from the dropdown menu for revision
-* **Force new deployment** - check this box
-
-    Your configuration will look similar to this:
-![Update Like service](./images/03-updateLikeService.png)
-
-5. Leave all other fields as they are and click **Skip to review**. Once on the review page, click **Update Service**
-
-6. Click **View Service** and you should see the deployment begin. This will take a few minutes, so feel free to move on to the next step where you'll begin to instrument the Like service.
 
 ### [2] Instrument the Like service code using the AWS X-Ray SDK and Cloud9
 
