@@ -43,7 +43,7 @@ Further reading: [ECS Documentation: Task Definitions](https://docs.aws.amazon.c
 
 1. Navigate to [Task Definitions](https://console.aws.amazon.com/ecs/home#/taskDefinitions) in the ECS dashboard  
 
-2. Find the Like microservice task definition in the list; the name will start with `Multi-Region-Like-Service-` followed by the CloudFormation stack name you set.  
+2. Find the Like microservice task definition in the list; the name will start with `Like-Service-` followed by the CloudFormation stack name you set.  
 
 3. Select the checkbox next to the task definition, and click **Create new revision**.
 
@@ -126,10 +126,10 @@ Choose your adventure!
 2. Copy the instrumented Like service code from the answers directory into this working directory.
 
     ```
-    $ cp ~/environment/multi-region-workshop/lab-1-xray/answers/mysfits_like.py .
+    $ cp ~/environment/multi-region-workshop/lab-1-xray/answers/mysfits_like.py ./service
     ```
 
-    [*^ Click here to fast-forward to Section 3 to deploy the changes for the Like service*](#[3]-deploy-the-changes-you-made-to-the-like-service)
+    [*Click here to skip to Section 3 to deploy your changes*](#(3)-deploy-the-changes-you-made-to-the-like-service)
 
 <br>
 </details>
@@ -362,7 +362,7 @@ if __name__ == "__main__":
 
 Now you are ready to check in your code and let the CI/CD pipeline build revised container images and re-deploy the Like service with Fargate.
 
-### [3] Deploy the changes you made to the Like service
+### (3) Deploy the changes you made to the Like service
 
 Since Mythical Mysfits moved to a microservices architecture, it was apparent that an automated CI/CD pipeline was necessary in order to remain agile. The dev team adopted [AWS CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html) which coordinates a few tasks:
 
