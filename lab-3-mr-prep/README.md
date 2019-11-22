@@ -46,25 +46,16 @@ The most difficult part of a multi-region application is typically data synchron
 
 There's an easy way to do this - DynamoDB Global Tables. This feature will ensure we always have a copy of our data in both our primary and failover region by continuously replicating changes using DynamoDB Streams. We'll set this up now.
 
-# It's totally possible that this will not be necessary. For now follow these instructions
-
-**Note:** In order to setup Global Tables you will need an empty table. For this lab this is not a big issue but if you are migrating from an system with existing data you will need a solution to backup/restore data or migrate from one your old table to a new table with your regions already setup for Global Tables replication. We'll leave this as an exercise ot the reader.
+## Given this was only released recently, these instructions are quick and dirty (for now).
+[TODO - Add screenshots]
 
 In your source region (double check this) DynamoDB, select the table. It will be named 'MythicalMysfits-DDB-\*' followed by your chosen stack name.
 
-![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png)
+![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png_DELIBERATEBREAK)
 
-Delete all items in your ddb table
+Next, choose the Global Tables tab from the top, click **Enable Streams**. Once Streams have been enabled, under **Global Table Regions**, click Add region and add the US-East region and click Create replica. Wait 5 minutes.
 
-Next, choose the Global Tables tab from the top, click **Enable Streams**, and go ahead and create your Global Table and choose your second region (US East N. Virginia)- just accept any messages to enable anything it needs and to create any roles it may need as well.
-
-![Configure DynamoDB with Global Tables](images/03-ddb-create-gt.png)
-
-Now that you have created the N. Virginia (US-East-1) Global Table, run this:
-<pre>
-  $ cd ~/environment/multi-region-workshop
-  $ bootstrap/ddb/load-ddb
-</pre>
+![Configure DynamoDB with Global Tables](images/03-ddb-create-gt.png_DELIBERATEBREAK)
 
 Take a look at DynamoDB in your **Primary Region** and also in your **Secondary Region**. You should see that the objects have already been propagated.
 
