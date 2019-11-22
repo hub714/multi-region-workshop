@@ -102,7 +102,7 @@ Click **Done** and then **Save** at the top of the screen. Click through prompts
 * Region: **Choose the secondary region you deployed into** - By default, this should be US East - (N. Virginia)
 * Input artifacts: **BuildArtifact**
 * Cluster name: **Choose the cluster that was created for you. It will start with Cluster-**
-* Service name: **Select the service that includes "Core"**
+* Service name: **Select the service that includes "Like"**
 * Image definitions file: **imagedefinitions_secondary.json** - The value of this will depend on what you output in your buildspec. Our default is imagedefinitions_secondary.json.
 
 ![Do it again with the like](images/03-cp-createactiongroup-like.png)
