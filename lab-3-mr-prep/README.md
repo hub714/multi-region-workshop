@@ -53,7 +53,7 @@ In your source region (double check this) DynamoDB, select the table. It will be
 
 ![Configure DynamoDB with Global Tables](../images/03-ddb-global-tables-screen.png_DELIBERATEBREAK)
 
-Next, choose the Global Tables tab from the top, click **Enable Streams**. Once Streams have been enabled, under **Global Table Regions**, click Add region and add the US-East region and click Create replica. Wait 5 minutes.
+Next, choose the Global Tables tab from the top, click **Enable Streams**. Once Streams have been enabled, under **Global Table Regions**, click Add region and add the US-East region and click Create replica. (This will take about 5 minutes so proceed with the rest of this lab and it'll work away in the background).
 
 ![Configure DynamoDB with Global Tables](images/03-ddb-create-gt.png_DELIBERATEBREAK)
 
