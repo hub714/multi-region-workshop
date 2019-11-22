@@ -24,7 +24,7 @@ To do this, create an empty postfile using this command:
 
 Now we can specify it as part of our **ab** command:
 
-`ab -p postfile.txt http://<Insert your Global Accelerator Endpoint>`
+`ab -p postfile.txt http://<Insert your Global Accelerator Endpoint>/ <--note the ending forward slash` 
 
 Now lets add in the remaining path to call the Like service, along with one of our Mysfits IDs:
 
@@ -39,8 +39,8 @@ Taking everything into account from the above, lets make sure we understand what
 * **-p** flag specifies that we are sending a HTTP POST request
 * **postfile.txt** - specifies the empty payload file required for AB to send a POST request
 * **http:/<Insert your Global Accelerator Endpoint>/mysfits/da5303ae-5aba-495c-b5d6-eb5c4a66b941/like** - the full URI of what we're POSTing to.
-  
-Example - 
+
+Example -
 `watch ab -p postfile.txt http://a174d65be73381239e.awsglobalaccelerator.com/mysfits/da5303ae-5aba-495c-b5d6-eb5c4a66b941/like`
 
 ### 5.1 Run AB against the stack in the Primary region to test it is working correctly
