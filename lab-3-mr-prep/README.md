@@ -155,13 +155,13 @@ Open the two files and replace these variables:
 Finally, add all the files to both repos and trigger deployments:
 
 <pre>
-  $ cd ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/
+  $ cd ~/environment/<b>core-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]</b>
   $ git add -A
-  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git commit -m "Updating core buildspec for multi-region deploy"
   $ git push origin master
-  $ cd ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/
+  $ cd ~/environment/<b>like-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]</b>
   $ git add -A
-  $ git commit -m "Updating buildspec for multi-region deploy"
+  $ git commit -m "Updating like buildspec for multi-region deploy"
   $ git push origin master
 </pre>
 
@@ -180,9 +180,6 @@ If you are unfamiliar with Amazon Cloudwatch, you may consider creating a duplic
 * Click **Save dashboard**
 
 </details>
-
-
-
 
 
 ### X. Edit the widgets to show metrics from the other region
