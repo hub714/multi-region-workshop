@@ -118,7 +118,7 @@ Console:
 
 CLI:
 <pre>
-  $ cd ~/environment/<b>REPLACEME_SECONDARY_CORE_REPO_NAME</b>
+  $ cd ~/environment/core-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
 </pre>
 
 Find the buildspec_prod file in both mysfits-service and like-service. Update them to push your conainers and application to both regions. Within both of the buildspecs there are [TODO] lines to guide you through what you'll need to do. It's your choice if you want to understand how the build process works. Otherwise...
@@ -129,8 +129,10 @@ Find the buildspec_prod file in both mysfits-service and like-service. Update th
 <summary>Click here for a completed buildspec and commands to copy them in:</summary>
 We have created some completed buildspec files if you want to skip this portion. They are in the app/hints folder.
 <pre>
-  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml ~/environment/<b>REPLACEME_CORE_REPO_NAME</b>/buildspec_prod.yml
-  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml ~/environment/<b>REPLACEME_LIKE_REPO_NAME</b>/buildspec_prod.yml
+  $ cd ~/environment/core-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
+  $ cp ~/environment/multi-region-workshop/app/hints/mysfits-service-buildspec_prod.yml .
+  $ cd ~/environment/like-service-[PRESS TAB TO AUTO COMPLETE AND PRESS ENTER]
+  $ cp ~/environment/multi-region-workshop/app/hints/like-buildspec_prod.yml .
 
 Open the two files and replace these variables:
 * REPLACEME_SECONDARY_REGION with your secondary region (default **us-east-1**) in both buildspec_prod.yml files
