@@ -331,48 +331,48 @@ Resources:
                 FileName: imagedefinitions_primary.json
               RunOrder: 1
 
-  MythicalInfraPipeline:
-    Type: 'AWS::CodePipeline::Pipeline'
-    Properties:
-      ArtifactStore:
-        Type: S3
-        Location: !Ref MythicalArtifactBucket
-      Name: !Sub InfraPipeline-${AWS::StackName}
-      RoleArn: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
-      Stages:
-        - Name: 'Source'
-          Actions:
-            - Name: 'Source'
-              ActionTypeId:
-                Category: 'Source'
-                Owner: 'AWS'
-                Version: '1'
-                Provider: 'CodeCommit'
-              OutputArtifacts:
-                - Name: SourceArtifact
-              Configuration:
-                PollForSourceChanges: 'false'
-                BranchName: master
-                RepositoryName: !GetAtt MythicalInfraGitRepository.Name
-              RunOrder: 1
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Version: 1
-                Provider: CloudFormation
-              InputArtifacts:
-                - Name: SourceArtifact
-              Configuration:
-                ActionMode: CREATE_UPDATE
-                Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
-                StackName: !Ref CfnStackName
-                TemplatePath: SourceArtifact::core.yml
-                TemplateConfiguration: SourceArtifact::parameters_primary.json
-                RoleArn: !GetAtt InfraCfnServiceRole.Arn
-              RunOrder: 1
+  # MythicalInfraPipeline:
+  #   Type: 'AWS::CodePipeline::Pipeline'
+  #   Properties:
+  #     ArtifactStore:
+  #       Type: S3
+  #       Location: !Ref MythicalArtifactBucket
+  #     Name: !Sub InfraPipeline-${AWS::StackName}
+  #     RoleArn: !GetAtt MythicalMysfitsServiceCodePipelineServiceRole.Arn
+  #     Stages:
+  #       - Name: 'Source'
+  #         Actions:
+  #           - Name: 'Source'
+  #             ActionTypeId:
+  #               Category: 'Source'
+  #               Owner: 'AWS'
+  #               Version: '1'
+  #               Provider: 'CodeCommit'
+  #             OutputArtifacts:
+  #               - Name: SourceArtifact
+  #             Configuration:
+  #               PollForSourceChanges: 'false'
+  #               BranchName: master
+  #               RepositoryName: !GetAtt MythicalInfraGitRepository.Name
+  #             RunOrder: 1
+  #       - Name: Deploy
+  #         Actions:
+  #           - Name: Deploy
+  #             ActionTypeId:
+  #               Category: Deploy
+  #               Owner: AWS
+  #               Version: 1
+  #               Provider: CloudFormation
+  #             InputArtifacts:
+  #               - Name: SourceArtifact
+  #             Configuration:
+  #               ActionMode: CREATE_UPDATE
+  #               Capabilities: 'CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND'
+  #               StackName: !Ref CfnStackName
+  #               TemplatePath: SourceArtifact::core.yml
+  #               TemplateConfiguration: SourceArtifact::parameters_primary.json
+  #               RoleArn: !GetAtt InfraCfnServiceRole.Arn
+  #             RunOrder: 1
 
   # CodePipeline does not automatically create this for you as part of
   # creation, but this role is for the CWE Hook to trigger CodePipeline once
@@ -403,7 +403,7 @@ Resources:
                 Resource:
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalLikeServicePipeline}
                   - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalCoreServicePipeline}
-                  - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalInfraPipeline}
+                  # - !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalInfraPipeline}
   # Actual CWE Rule to push changes over to CodePipeline.
 
   CodeCommitCloudWatchEventRule:
@@ -454,29 +454,29 @@ Resources:
           RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
           Id: codepipeline-CorePipeline
 
-  InfraCommitCloudWatchEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source:
-          - aws.codecommit
-        detail-type:
-          - 'CodeCommit Repository State Change'
-        resources:
-          - !GetAtt MythicalInfraGitRepository.Arn
-        detail:
-          event:
-            - referenceCreated
-            - referenceUpdated
-          referenceType:
-            - branch
-          referenceName:
-            - master
-      Targets:
-        -
-          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalInfraPipeline}
-          RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
-          Id: codepipeline-InfraPipeline
+  # InfraCommitCloudWatchEventRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     EventPattern:
+  #       source:
+  #         - aws.codecommit
+  #       detail-type:
+  #         - 'CodeCommit Repository State Change'
+  #       resources:
+  #         - !GetAtt MythicalInfraGitRepository.Arn
+  #       detail:
+  #         event:
+  #           - referenceCreated
+  #           - referenceUpdated
+  #         referenceType:
+  #           - branch
+  #         referenceName:
+  #           - master
+  #     Targets:
+  #       -
+  #         Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${MythicalInfraPipeline}
+  #         RoleArn: !GetAtt CodeCommitCloudWatchEventRole.Arn
+  #         Id: codepipeline-InfraPipeline
 
 Outputs:
   MythicalLikeGitRepositoryCloneUrl:
